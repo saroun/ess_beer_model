@@ -168,11 +168,30 @@ x_sample = 158000.
 r_beam2 = BA.beamAxis(x_sample, coord='ISCS')
 r_beam2_tcs = BA.ISCS2TCS(r_beam2)
 r_beam2_fp = BA.ISCS2FOC(r_beam2)
-fmt = 'r_beam({:g}) = [{:g},{:g},{:g}]_iscs = [{:g},{:g},{:g}]_fp = [{:g},{:g},{:g}]_tcs'
+fmt = 'r_beam({:g}) = [{:g},{:g},{:g}]_iscs = [{:g},{:g},{:g}]_fp = [{:g},{:g},{:g}]_tcs\n'
 print(fmt.format(x_sample, *r_beam2, *r_beam2_fp, *r_beam2_tcs))
 
 
-# %%
+# %%X = 27999,893  Y = -80,993
+fmt = '{}: [{:g},{:g},{:g}]_iscs = [{:g},{:g},{:g}]_tcs, R_TCS={:g}\n'
 
+ctr_shutter_ISCS = BA.beamAxis(27999.893+5, coord='ISCS')
+ctr_shutter_TCS = BA.ISCS2TCS(ctr_shutter_ISCS)
+rad_shutter_TCS = np.sqrt(ctr_shutter_TCS.dot(ctr_shutter_TCS))
+print(fmt.format('shutter',*ctr_shutter_ISCS, *ctr_shutter_TCS, rad_shutter_TCS))
+
+
+ctr_BWI_ISCS = BA.beamAxis(27999.893, coord='ISCS')
+ctr_BWI_TCS = BA.ISCS2TCS(ctr_BWI_ISCS)
+rad_BWI_TCS = np.sqrt(ctr_BWI_TCS.dot(ctr_BWI_TCS))
+print(fmt.format('BWI',*ctr_BWI_ISCS, *ctr_BWI_TCS, rad_BWI_TCS))
+
+# beam at the level of BW surface
+r_BWI2_TCS = np.array([-22951.902, 16200.728, 137])
+r_BWI2_ISCS = BA.TCS2ISCS(r_BWI2_TCS)
+ctr_BWI2_ISCS = BA.beamAxis(r_BWI2_ISCS[0], coord='ISCS')
+ctr_BWI2_TCS = BA.ISCS2TCS(ctr_BWI2_ISCS)
+rad_BWI2_TCS = np.sqrt(ctr_BWI2_TCS.dot(ctr_BWI2_TCS))
+print(fmt.format('BWI2',*ctr_BWI2_ISCS, *ctr_BWI2_TCS, rad_BWI2_TCS))
 
 

@@ -2,18 +2,23 @@
 """
 Module with definitions of BEER guide system sections and tools for 
 exporting tables and graphical output of schematics.
-version: 1.4
+version: 1.5
 Date: October 13, 2018, 2018
 
 Created on Wed Jul  4 11:17:33 2018
 @author: J. Saroun, saroun@ujf.cas.cz
+
+
+update 2019-08-27: revision 1.5
+    Adjusted NBOA+BBG according actual drawings
+    Adjusted shutter pit , W02-13 to W02-15 according actual drawings.
 """
 
-import numpy as np
-from matplotlib import pyplot as plt
+#import numpy as np
+#from matplotlib import pyplot as plt
 import BEERgeometry as B
 import datetime
-VERSION = '1.4'
+VERSION = '1.5'
 DATE = datetime.datetime.now().strftime("%B %d, %Y, %H:%M:%S")
 
 # %% Define component list sections
@@ -97,7 +102,8 @@ go = 1.5 # gap between Al window and optics
 gw = w + go
 gc = 50 # gap between chopper discs
 gcg = 25 # chopper center to guide in common housing
-gsh = 20 # air gap between shutter and guide window
+#gsh = 20 # air gap between shutter and guide window
+gsh = 5 # air gap between shutter and guide window
 gsl = 30 # gap for a slit
 
 
@@ -116,17 +122,22 @@ def getChopperGuide(num, start, end):
 BEER = {}
 
 # NBOA
-BEER['W0'] = window('W0', B.nboa_start - 5, thickness=1)
-BEER['NBOA'] = guide(1, B.nboa_start, B.nboa_end-4-3-1-go, 'monolith insert', 
+# BEER['W0'] = window('W0', B.nboa_start - 5, thickness=1)
+BEER['W0'] = window('W0', B.nboa_start - 5, thickness=1.5)
+
+#BEER['NBOA'] = guide(1, B.nboa_start, B.nboa_end-4-3-1-go, 'monolith insert', 
+#    m=[2.5, 2.5, 4., 4.], gv=B.E1)
+BEER['NBOA'] = guide(1, B.nboa_start, B.nboa_end, 'monolith insert', 
     m=[2.5, 2.5, 4., 4.], gv=B.E1)
-BEER['W1'] = window('W1', B.nboa_end-4-3-1, thickness=1)
-BEER['NBW'] = window('NBW', B.nboa_end-4, thickness=4)
+
+BEER['W1'] = window('W1', B.nboa_end+5-1, thickness=1)
+# BEER['NBW'] = window('NBW', B.nboa_end-4, thickness=4) # rev. 1.5, not included !!!
 # BBG
-BEER['W2'] = window('W2', B.bbg_start)
-BEER['BBG'] =  guide(2, B.bbg_start+w+2.5, B.bbg_end-w-2.5, 'bridge beam guide',
+BEER['W2'] = window('W2', B.bbg_start-w-2.5, thickness=w)
+BEER['BBG'] =  guide(2, B.bbg_start, B.bbg_end, 'bridge beam guide',
     m=[2.5, 2.5, 4., 4.], gv='flat expanding, on ellipse '+getEllStr(B.E1))
 
-BEER['W3'] = window('W3', B.bbg_end-w)
+BEER['W3'] = window('W3', B.bbg_end+2.5, thickness=w)
 BEER['W4'] = window('W4', B.bbg_end + 17.5)
 
 # bi-spectral switch, assumed to be in air before 1st chopper housing
@@ -176,10 +187,16 @@ Bunker wall radius is R=28000 TCS (outer pillars), which is 27904.46 ISCS.
 B.curve1_end is set to the bunker radius of 28 m ISCS. 
 The wall througput is assumed to end at 28 + 0.3 m TCS, which is 28204.45 ISCS.
 We use a rounded value of 28200, until the exact designed value is known.
+
+Upadte ver. 1.5: throughput flange ends at =27999.893 according to the drawings.
+Rounded to 28000. The air gaps are set to 5 mm on both sides.
+Note that GN2 curvature ends at 27904.46 ISCS, cca 95.5 mm before the end ...
+
 """
 wall_out_calc = B.TCS2ISCS(B.positionAtRadius(28000+300))[0]
-wall_out=28200 # end of the bunker wall insert
-# wall_out=28000 # CATIA 12/10/2018
+# wall_out=28200 # end of the bunker wall insert
+wall_out=28000 # update ver. 1.5
+
 BEER['W10'] = window('W10', B.curve1_begin-gw)
 BEER['GE1'] =  guide(10, B.curve1_begin, B.E1['c']-g, 
     'NOTE: bent & vertically expanding !', m=[3., 2.5, 3., 3.], RH=1e-6/B.curve1, gv=B.E1)
@@ -190,19 +207,35 @@ BEER['GN2'] =  guide(12, wall_in, wall_out-gw,
 BEER['W11'] = window('W11', wall_out-w)
 
 # shutter (after bunker throughput, length 0.7 m)
-shutter_len = 700
+# shutter_len = 700
+shutter_len = 610 # update ver. 1.5
 shutter_start = BEER['W11']['end'] + gsh
 BEER['W12'] = window('W12', shutter_start)
 BEER['GSH2'] =  guide(13, shutter_start + gw, shutter_start + shutter_len-gw, 
     'shutter insert', m=[2.5, 2.5, 2., 2.])
 BEER['W13'] = window('W13', BEER['GSH2']['end'] + go)
 
-# Guide after the shutter starts as soon as possible.
-# NOTE: Expansion starts at B.E2['start'], which is not necessary the guide entry.
-shutter_wall=30800 # Assuming shutter wall end at 27700 + 3200 (TCS) = 30804 (ISCS)
+""" 
+NOTE:
+Guide after the shutter starts as soon as possible.
+Expansion starts at B.E2_start, which is not necessary the guide entry.
+Hence we have to insert a straight element if we want keep the ellipse parameters. 
+
+update ver. 1.5: downstream shutter pit outer dimension is ~ 3260 mm. Hence GE2A should 
+end after that, estmate is 300 mm, which sets the end of GE2A to ~ 28000-300+3260+300 = 31260.
+This is to be updated with the actual throughput design.     
+
+"""
+
+# shutter_wall=30800 # Assuming shutter wall end at 27700 + 3200 (TCS) = 30804 (ISCS)
+shutter_wall=31260 # update ver. 1.5
+
 BEER['W14'] = window('W14', BEER['W13']['end'] + gsh)
-BEER['GE2A'] =  guide(14,BEER['W14']['end'] + go , shutter_wall-g, 
-    'shutter wall insert', m=[2.5, 2.5, 2., 2.], gh=B.E2)
+# update ver. 1.5, adding straight element
+BEER['GE2AS'] =  guide(14,BEER['W14']['end'] + go , B.E2_start-g, 
+    'shutter pit insert, parallel', m=[2.5, 2.5, 2., 2.])
+BEER['GE2A'] =  guide(14, B.E2_start , shutter_wall-5, 
+    'shutter pit insert, elliptic', m=[2.5, 2.5, 2., 2.], gh=B.E2)
 BEER['GE2B'] =  guide(15, shutter_wall, B.curve2_begin-g, 
     ' ', m=[2.5, 2.5, 2., 2.], gh=B.E2)
 

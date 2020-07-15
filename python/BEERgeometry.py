@@ -2,12 +2,20 @@
 """
 Module for calculation of BEER beam axis and beam profile, utilities
 for coordinate conversions and plotting of beam profile.
-version: 1.4
+version: 1.5
 Date: October 13, 2018
 
 Created on Tue Oct 10 10:49:35 2017
 @author: J. Saroun, saroun@ujf.cas.cz
+
+update 2019-06-21: 
+    getSlice() and printSlice() give correct x-coordinate, not just the given distance 
+    Added printSliceCal() to calculate and print slice in one command
+update 2019-08-27: revision 1.5
+    Updated true distances of optical components according to the detailed design.
+    Geometry of the beam and optical surfaces remains unchanged.
 """
+
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -135,14 +143,19 @@ Actual distances of NBOA and BBG faces
 """
 # Start of NBOA as designed
 nboa_start = 2030.5
+
 # End of NBOA as designed (end of 4 mm window)
-nboa_end = 5404.42
+# nboa_end = 5404.42
+nboa_end = nboa_start + 3361.5 # revision 1.5 according to design
+
 # End of BBG as designed
 # This should be the 22 mm wide window at the exit from BBG (0.5 mm window end)
-bbg_end = 5896.92
-# Start of BBG as designed (start of 0.5 mm window)
-bbg_start = bbg_end - 489.00
+#bbg_end = 5896.92
+bbg_end = 5893.843 # revision 1.5 according to design
 
+# Start of BBG as designed (start of 0.5 mm window)
+# bbg_start = bbg_end - 489.00
+bbg_start = 5410.843 # revision 1.5 according to design
 
 # %% Derived parameters:
 
@@ -706,13 +719,25 @@ def getSlice(dist, coord='ISCS'):
     """
     # get profile in ISCS
     d = dist
-    win = beamSize(d, coord = coord).reshape(6,)
+    size = beamSize(d, coord = _COORD)
+    TL = np.array([dist, size[:,0], size[:,2]]).T
+    TR = np.array([dist, size[:,1], size[:,2]]).T
+    BL = np.array([dist, size[:,0], size[:,3]]).T
+    BR = np.array([dist, size[:,1], size[:,3]]).T
+    CTR = 0.25*(TL+TR+BL+BR)
+    if (coord != _COORD):
+        TL = convertTo(coord, TL)
+        TR = convertTo(coord, TR)
+        BL = convertTo(coord, BL)
+        BR = convertTo(coord, BR)
+        CTR = convertTo(coord, CTR)
+        
     # corner coordinates
-    TL = np.array([d, win[0], win[2]])
-    TR = np.array([d, win[1], win[2]])
-    BL = np.array([d, win[0], win[3]])
-    BR = np.array([d, win[1], win[3]])
-    CTR = 0.25*(TL+TR+BL+BR)    
+   # TL = np.array([d, win[0], win[2]])
+  #  TR = np.array([d, win[1], win[2]])
+  #  BL = np.array([d, win[0], win[3]])
+  #  BR = np.array([d, win[1], win[3]])
+  #  CTR = 0.25*(TL+TR+BL+BR)    
     corners = {}
     corners['CTR'] = CTR
     corners['TL'] = TL
@@ -722,11 +747,11 @@ def getSlice(dist, coord='ISCS'):
     return corners
 
 
-def printSlice(win, leg=''):
-    sfx2 = '\t{:.2f}\t{:.2f}\n'
-    sfx3 = '\t{:.2f}\t{:.2f}\t{:.2f}\n'
-    fmt = 'Slice of {}:\n'
-    fmt += 'width, height:'+sfx2
+
+def getSliceReport(win):
+    sfx2 = '\t{:.3f}\t{:.3f}\n'
+    sfx3 = '\t{:.3f}\t{:.3f}\t{:.3f}\n'
+    fmt = 'width, height:'+sfx2
     fmt += 'centre:'+sfx3
     fmt += 'top - left:'+sfx3
     fmt += 'top - right:'+sfx3
@@ -734,9 +759,19 @@ def printSlice(win, leg=''):
     fmt += 'bottom - right:'+sfx3
     width = win['TL'][1]-win['TR'][1]
     height = win['TL'][2]-win['BL'][2]
-    print(fmt.format(leg, width, height, 
-                     *win['CTR'], *win['TL'], *win['TR'], *win['BL'], *win['BR']))    
+    out = fmt.format(width, height, *win['CTR'], *win['TL'], *win['TR'], *win['BL'], *win['BR'])
+    return out
 
+def printSlice(win, leg=''):
+    out = 'Slice of {}:\n'.format(leg)
+    out += getSliceReport(win)
+    print(out)    
+
+def printSliceCal(dist, leg='', coord='ISCS'):
+    win = getSlice(dist, coord=coord)
+    out = '{}: Slice at {:.3f} (ISCS_x), coord={}\n'.format(leg,dist,coord)
+    out += getSliceReport(win)
+    print(out)
 
 # %%
 
@@ -806,7 +841,7 @@ def plotProfile(dist, coord='ISCS', file=''):
     plt.xlabel('Distance, mm')
     plt.ylabel('Width, mm')
     plt.title('Horizontal profile, {}'.format(coord))
-    ax = plt.axes()
+    ax = plt.gca()
     plt.errorbar(axis[:,0], profile[:,0], fmt='b-')
     plt.errorbar(axis[:,0], profile[:,1], fmt='b-')
     ln3 = plt.errorbar(axis[:,0], axis[:,1], fmt='r--', label='beam axis')
@@ -902,4 +937,11 @@ div = []
 div.append([1, 483.5, 4.0, 4.0, 3., 3.])
 out = printCFG(5941.5, div)
 print(out)  
+
+
+
+coord = 'FP'
+L=2026
+win = getSlice(2026, coord=coord)
+printSlice(win,leg='Feeder Entry at {:g}\n'.format(L)+coord)
 """

@@ -161,3 +161,58 @@ print('right, W2 [{:.3f}, {:.3f}, {:.3f}]'.format(*r_FP))
 
 print('height: {:.3f}'.format(h2))
 
+# %% Validation 2019-06-21:
+
+coord = 'ISCS'
+
+pos = 'Feeder entry'
+L=2026
+BA.printSliceCal(L, leg=pos, coord='ISCS')
+BA.printSliceCal(L, leg=pos, coord='FP')
+
+pos = 'NBOA entry'
+L=2030.5
+BA.printSliceCal(L, leg=pos, coord='ISCS')
+BA.printSliceCal(L, leg=pos, coord='FP')
+
+pos = 'NBOA exit 1'
+L=5390.1
+BA.printSliceCal(L, leg=pos, coord='ISCS')
+BA.printSliceCal(L, leg=pos, coord='FP')
+
+pos = 'NBOA exit 2'
+L=5394.9
+BA.printSliceCal(L, leg=pos, coord='ISCS')
+BA.printSliceCal(L, leg=pos, coord='FP')
+
+
+pos = 'BBGOA Entry (theor)'
+L=5394.9
+BA.printSliceCal(L, leg=pos, coord='ISCS')
+BA.printSliceCal(L, leg=pos, coord='FP')
+
+pos = 'BBGOA Entry (real)'
+L=5410.855
+BA.printSliceCal(L, leg=pos, coord='FP')
+L=5411.01199
+BA.printSliceCal(L, leg=pos, coord='FP')
+L=5410.9338
+BA.printSliceCal(L, leg=pos, coord='FP')
+
+pos = 'BBGOA Exit (theor)'
+L=5893.9
+BA.printSliceCal(L, leg=pos, coord='ISCS')
+BA.printSliceCal(L, leg=pos, coord='FP')
+
+pos = 'BBGOA Exit (real)'
+L=5893.86647777
+BA.printSliceCal(L, leg=pos, coord='FP')
+L=5893.98167234
+BA.printSliceCal(L, leg=pos, coord='FP')
+L=5893.92407751
+BA.printSliceCal(L, leg=pos, coord='FP')
+
+pos = 'Feeder Exit'
+L=5894
+BA.printSliceCal(L, leg=pos, coord='ISCS')
+BA.printSliceCal(L, leg=pos, coord='FP')

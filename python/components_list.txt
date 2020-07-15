@@ -1,26 +1,24 @@
 # Generated with BEERcomponents.py
-# Date:	May 14, 2019, 16:48:06
-# Version:	1.4
+# Date:	August 27, 2019, 17:43:14
+# Version:	1.5
 ID	start	end	length	type	name	w1	w2	h1	h2	ctr1	ctr2	mL	mR	mT	mB	geomH	geomV	comment
- 	2025.5	2026.5	1.0	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	2026.5	2030.5	4.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
-W02-1	2030.5	5394.9	3364.4	optics	NBOA	84.93	30.13	35.00	59.68	5.60	1.47	2.5	2.5	4	4	straight, convergent	ellipse(a:14423, b:40, ctr:15000), expanding	monolith insert
- 	5394.9	5396.4	1.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	5396.4	5397.4	1.0	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	5397.4	5400.4	3.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	5400.4	5404.4	4.0	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	5404.4	5407.9	3.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	5407.9	5408.4	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	5408.4	5410.9	2.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
-W02-2	5410.9	5893.9	483.0	optics	BBG	29.87	22.00	59.76	62.04	1.45	0.86	2.5	2.5	4	4	straight, convergent	flat expanding, on ellipse a:14423, b:40, ctr:15000	bridge beam guide
- 	5893.9	5896.4	2.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	5896.4	5896.9	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	5896.9	5914.4	17.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	5914.4	5914.9	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	5914.9	5934.9	20.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
-W02-3	5934.9	5949.9	15.0	optics	GSW	22.50	22.50	65.00	65.00	1.08	1.15	3	3	0	0	stack of 150 um Si wafers, angle=-0.57o rel. to ISCS_x axis	 	bi-spectral switch, adjustable angle, movable on/off the beam
- 	5949.9	5969.9	20.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
-W02-4-01	5969.9	6425.0	455.1	optics	GCA1	20.00	20.00	62.38	64.33	1.26	3.64	4	4	3	3	straight, parallel	flat expanding, on ellipse a:14423, b:40, ctr:15000	chopper guide element
+ 	2025.5	2027.0	1.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	2027.0	2030.5	3.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+W02-1	2030.5	5392.0	3361.5	optics	NBOA	84.93	30.18	35.00	59.66	5.60	1.48	2.5	2.5	4	4	straight, convergent	ellipse(a:14423, b:40, ctr:15000), expanding	monolith insert
+ 	5392.0	5396.0	4.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	5396.0	5397.0	1.0	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	5397.0	5407.8	10.8	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	5407.8	5408.3	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	5408.3	5410.8	2.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+W02-2	5410.8	5893.8	483.0	optics	BBG	29.87	22.00	59.76	62.04	1.45	0.86	2.5	2.5	4	4	straight, convergent	flat expanding, on ellipse a:14423, b:40, ctr:15000	bridge beam guide
+ 	5893.8	5896.3	2.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	5896.3	5896.8	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	5896.8	5911.3	14.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	5911.3	5911.8	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	5911.8	5931.8	20.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+W02-3	5931.8	5946.8	15.0	optics	GSW	22.50	22.50	65.00	65.00	1.06	1.14	3	3	0	0	stack of 150 um Si wafers, angle=-0.57o rel. to ISCS_x axis	 	bi-spectral switch, adjustable angle, movable on/off the beam
+ 	5946.8	5966.8	20.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+W02-4-01	5966.8	6425.0	458.2	optics	GCA1	20.00	20.00	62.37	64.33	1.24	3.64	4	4	3	3	straight, parallel	flat expanding, on ellipse a:14423, b:40, ctr:15000	chopper guide element
  	6425.0	6445.0	20.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
 PSC1	6445.0	6455.0	10.0	chopper	PSC1	20.00	 	64.43	 	3.77	 	 	 	 	 	 	 	pulse shaping, fmax=280 Hz, win=144 deg
  	6455.0	6475.0	20.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
@@ -70,21 +68,23 @@ W02-10	10000.0	14999.0	4999.0	optics	GE1	20.00	20.00	75.04	80.00	22.36	42.29	3	2
  	14999.0	15000.0	1.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
 W02-11	15000.0	24499.0	9499.0	optics	GN1	20.00	20.00	80.00	80.00	42.29	45.72	3	2.5	2	2	curved, R=-2.000 km, parallel	straight, parallel	 
  	24499.0	24500.0	1.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
-W02-12	24500.0	28198.0	3698.0	optics	GN2	20.00	20.00	80.00	80.00	45.72	34.86	3	2.5	2	2	curved, R=-2.000 km, parallel	straight, parallel	bunker wall insert
- 	28198.0	28199.5	1.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	28199.5	28200.0	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	28200.0	28220.0	20.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	28220.0	28220.5	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	28220.5	28222.0	1.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
-W02-13	28222.0	28918.0	696.0	optics	GSH2	20.00	20.00	80.00	80.00	34.77	32.15	2.5	2.5	2	2	straight, parallel	straight, parallel	shutter insert
- 	28918.0	28919.5	1.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	28919.5	28920.0	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	28920.0	28940.0	20.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	28940.0	28940.5	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
- 	28940.5	28942.0	1.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
-W02-14	28942.0	30799.0	1857.0	optics	GE2A	20.00	28.16	80.00	80.00	32.06	25.07	2.5	2.5	2	2	ellipse(a:11547, b:20, ctr:39000), expanding	straight, parallel	shutter wall insert
- 	30799.0	30800.0	1.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
-W02-15	30800.0	38999.0	8199.0	optics	GE2B	28.16	40.00	80.00	80.00	25.07	-5.79	2.5	2.5	2	2	ellipse(a:11547, b:20, ctr:39000), expanding	straight, parallel	 
+W02-12	24500.0	27998.0	3498.0	optics	GN2	20.00	20.00	80.00	80.00	45.72	35.62	3	2.5	2	2	curved, R=-2.000 km, parallel	straight, parallel	bunker wall insert
+ 	27998.0	27999.5	1.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	27999.5	28000.0	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	28000.0	28005.0	5.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	28005.0	28005.5	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	28005.5	28007.0	1.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+W02-13	28007.0	28613.0	606.0	optics	GSH2	20.00	20.00	80.00	80.00	35.58	33.30	2.5	2.5	2	2	straight, parallel	straight, parallel	shutter insert
+ 	28613.0	28614.5	1.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	28614.5	28615.0	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	28615.0	28620.0	5.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	28620.0	28620.5	0.5	window	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+ 	28620.5	28622.0	1.5	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+W02-14	28622.0	28999.0	377.0	optics	GE2AS	20.00	20.00	80.00	80.00	33.27	31.85	2.5	2.5	2	2	straight, parallel	straight, parallel	shutter pit insert, parallel
+ 	28999.0	29000.0	1.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+W02-14	29000.0	31255.0	2255.0	optics	GE2A	20.00	29.67	80.00	80.00	31.84	23.36	2.5	2.5	2	2	ellipse(a:11547, b:20, ctr:39000), expanding	straight, parallel	shutter pit insert, elliptic
+ 	31255.0	31260.0	5.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
+W02-15	31260.0	38999.0	7739.0	optics	GE2B	29.68	40.00	80.00	80.00	23.34	-5.79	2.5	2.5	2	2	ellipse(a:11547, b:20, ctr:39000), expanding	straight, parallel	 
  	38999.0	39000.0	1.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
 W02-16	39000.0	79950.0	40950.0	optics	GT1	40.00	40.00	80.00	80.00	-5.79	-118.01	2	2.5	2	2	curved, R=20.000 km, parallel	straight, parallel	transport guide before chopper
  	79950.0	79970.0	20.0	gap	 	 	 	 	 	 	 	 	 	 	 	 	 	 
