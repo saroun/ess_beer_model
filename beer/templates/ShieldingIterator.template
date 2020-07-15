@@ -1,0 +1,131 @@
+
+
+/**IIIIIIIIIIIIIIIIIII ITERATOR SECTION. PROCESSING STORED EVENTS  IIIIIIIIIIIIIIII***/
+/* Insert this into McStas instrument file to do the costs evaluation */
+COMPONENT arm_iter_P1_start=Arm()
+AT(0,0,0) RELATIVE ISCS
+
+COMPONENT iter_P1_start = Shielding_log_iterator_Ni_new()
+AT (0,0,0) RELATIVE ISCS //ABSOLUTE
+EXTEND
+%{
+#ifdef scatter_iterator_stop
+#undef scatter_iterator_stop
+#endif
+#define scatter_iterator_stop iter_P1_start
+%}
+JUMP arm_iter_P1_stop WHEN(optics_not_hit)
+
+/*Monitoring the tracks stored by the scatter logger*/
+/*Putting dummy arm to register all neutrons to ensure that monitors_nD with shape "previous" will process them */
+COMPONENT arm_iter_P1_dummy=Arm ()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT mndP01=Monitor_nD (
+restore_neutron=1,   zmin=@ZMIN,
+zmax=@ZMAX,
+bins=@ZBINS, options="previous no slit  z ", filename="NiCapture.dat")
+AT(0,0,0) RELATIVE ISCS //RELATIVE source
+
+COMPONENT arm_iter_P1_stop=Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT iter_P1_stop  = Shielding_log_iterator_stop(iterator=iter_P1_start)
+AT(0,0,0)  RELATIVE ISCS
+
+/*Moving again to the reference point of iterator start 
+when there are still some tracks stored to perform iterations with,
+checked by the function MC_GETPAR */
+COMPONENT a11i = Arm()
+AT (0,0,0) RELATIVE @SH_START_ELEMENT
+JUMP arm_iter_P1_start  WHEN(MC_GETPAR(iter_P1_stop,loop))
+
+/*IIIIIIIIIIIIIIIIIIII  END OF PROCESSING. END OF ITERATOR  SECTION IIIIIIIIIIIIIIIIIIIIIIIIIIIII*/
+
+
+
+
+/**IIIIIIIIIIIIIIIIIII ITERATOR SECTION2. PROCESSING STORED EVENTS  IIIIIIIIIIIIIIII***/
+/* Insert this into McStas instrument file to do the costs evaluation */
+COMPONENT arm_iter_P2_start=Arm()
+AT(0,0,0) RELATIVE ISCS
+
+COMPONENT iter_P2_start = Shielding_log_iterator_Ti_new()
+AT (0,0,0) RELATIVE ISCS //ABSOLUTE
+EXTEND
+%{
+#ifdef scatter_iterator_stop
+#undef scatter_iterator_stop
+#endif
+#define scatter_iterator_stop iter_P2_start
+%}
+JUMP arm_iter_P2_stop WHEN(optics_not_hit)
+
+/*Monitoring the tracks stored by the scatter logger*/
+/*Putting dummy arm to register all neutrons to ensure that monitors_nD with shape "previous" will process them */
+COMPONENT arm_iter_P2_dummy=Arm ()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT mndP02=Monitor_nD (
+restore_neutron=1,   zmin=@ZMIN,
+zmax=@ZMAX,
+bins=@ZBINS, options="previous no slit  z ", filename="TiCapture.dat")
+AT(0,0,0) RELATIVE ISCS //RELATIVE source
+
+COMPONENT arm_iter_P2_stop=Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT iter_P2_stop  = Shielding_log_iterator_stop(iterator=iter_P2_start)
+AT(0,0,0)  RELATIVE ISCS
+
+/*Moving again to the reference point of iterator start 
+when there are still some tracks stored to perform iterations with,
+checked by the function MC_GETPAR */
+COMPONENT a12i = Arm()
+AT (0,0,0) RELATIVE @SH_START_ELEMENT 
+JUMP arm_iter_P2_start  WHEN(MC_GETPAR(iter_P2_stop,loop))
+
+/*IIIIIIIIIIIIIIIIIIII  END OF PROCESSING. END OF ITERATOR2  SECTION IIIIIIIIIIIIIIIIIIIIIIIIIIIII*/
+
+/**IIIIIIIIIIIIIIIIIII ITERATOR SECTION3. PROCESSING STORED EVENTS  IIIIIIIIIIIIIIII***/
+/* Insert this into McStas instrument file to do the costs evaluation */
+COMPONENT arm_iter_P3_start=Arm()
+AT(0,0,0) RELATIVE ISCS
+
+COMPONENT iter_P3_start = Shielding_log_iterator_total()
+AT (0,0,0) RELATIVE ISCS //ABSOLUTE
+EXTEND
+%{
+#ifdef scatter_iterator_stop
+#undef scatter_iterator_stop
+#endif
+#define scatter_iterator_stop iter_P3_start
+%}
+JUMP arm_iter_P3_stop WHEN(optics_not_hit)
+
+/*Monitoring the tracks stored by the scatter logger*/
+/*Putting dummy arm to register all neutrons to ensure that monitors_nD with shape "previous" will process them */
+COMPONENT arm_iter_P3_dummy=Arm ()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT mndP03=Monitor_nD (
+restore_neutron=1,   zmin=@ZMIN,
+zmax=@ZMAX,
+bins=@ZBINS, options="previous no slit  z ", filename="TotalCapture.dat")
+AT(0,0,0) RELATIVE ISCS //RELATIVE source
+
+COMPONENT arm_iter_P3_stop=Arm()
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT iter_P3_stop  = Shielding_log_iterator_stop(iterator=iter_P3_start, last=1)
+AT(0,0,0)  RELATIVE ISCS
+
+/*Moving again to the reference point of iterator start 
+when there are still some tracks stored to perform iterations with,
+checked by the function MC_GETPAR */
+COMPONENT a13i = Arm()
+AT (0,0,0) RELATIVE @SH_START_ELEMENT
+JUMP arm_iter_P3_start  WHEN(MC_GETPAR(iter_P3_stop,loop))
+
+/*IIIIIIIIIIIIIIIIIIII  END OF PROCESSING. END OF ITERATOR3  SECTION IIIIIIIIIIIIIIIIIIIIIIIIIIIII*/
+

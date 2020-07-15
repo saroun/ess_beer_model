@@ -1,0 +1,27 @@
+
+/**************** 
+The component SCalc will calculate thicknesses of materials required to reach MaxRate=1 uSv/hr at the shielding surface.
+The source is assumed in the center of 50 cm wide channel inside the shielding.
+The output will not be plotted, but can be found in the file "Shielding.dat" in the output folder.
+Binning in the files for Ni, Ti and Total capture should match.
+****************/
+COMPONENT SCalc=Shielding_calculator(MaxRate=1.0,Innerspace=0.5, NiCaptureFile="NiCapture.dat",TiCaptureFile="TiCapture.dat",TotalCaptureFile="TotalCapture.dat", OutputFile="Shielding.dat")
+AT (0,0,0) RELATIVE PREVIOUS
+
+/*Calculating dose rates at the surface of lateral shielding along the guide.*/
+/*Inner space in the shielding is assumed 40 cm wide, the guide is in the middle of the shielding housing.*/
+/*20 cm thick iron shielding*/
+COMPONENT DoseFe=Dose_calculator(Innerspace=0.4, Thickness=0.2, Material="Fe",  NiCaptureFile="NiCapture.dat",TiCaptureFile="TiCapture.dat",TotalCaptureFile="TotalCapture.dat", OutputFile="DoseFe.dat")
+AT (0,0,0) RELATIVE PREVIOUS
+
+/*60 cm thick concrete shielding*/
+COMPONENT DoseConc=Dose_calculator(Innerspace=0.4, Thickness=0.6, Material="Concrete", NiCaptureFile="NiCapture.dat",TiCaptureFile="TiCapture.dat",TotalCaptureFile="TotalCapture.dat", OutputFile="DoseConc.dat")
+AT (0,0,0) RELATIVE PREVIOUS
+
+/*10 cm steel followed by 40 cm concrete shielding*/
+COMPONENT DoseStandard=Dose_calculator(Innerspace=0.4, Thickness=0.4, Material="Concrete", SteelTubing="yes", TubingThickness=0.1,  NiCaptureFile="NiCapture.dat",TiCaptureFile="TiCapture.dat",TotalCaptureFile="TotalCapture.dat", OutputFile="DoseConcTubing.dat")
+AT (0,0,0) RELATIVE PREVIOUS
+
+/*5 cm steel followed by 40 cm concrete shielding*/
+COMPONENT Dose5=Dose_calculator(Innerspace=0.4, Thickness=0.6, Material="Concrete", SteelTubing="yes", TubingThickness=0.05,  NiCaptureFile="NiCapture.dat",TiCaptureFile="TiCapture.dat",TotalCaptureFile="TotalCapture.dat", OutputFile="DoseConcTubing5.dat")
+AT (0,0,0) RELATIVE PREVIOUS

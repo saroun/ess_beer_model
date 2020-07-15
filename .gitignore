@@ -1,2 +1,10 @@
 .spy*
+data
+work
+dist
+build
+*.egg*
+tmp*
+__pycache__
+
 
