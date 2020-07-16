@@ -130,7 +130,7 @@ def mcstasCompile(statinfo=False, shielding=False, force=False):
     if not force:
         exename = mcexe.verifyInstrument(verbose=0)
         if exename:
-            print('File {} already exists.'.format(exename))
+            print('File "{}" already exists.'.format(exename))
             print('Compilation skipped.')
             return
     
@@ -151,9 +151,11 @@ def mcstasCompile(statinfo=False, shielding=False, force=False):
         print('Try to run {}.mcstasConfig() again.'.format(fn))
         return
 
-    mcexe.compileInstrument(statinfo=statinfo, 
+    out = mcexe.compileInstrument(statinfo=statinfo, 
                                 shielding=shielding, 
                                 verify=False)
+    if not out:
+        print('WARNING: could not compile instrument file')
     
 
 def mcstasRun(modes=None, n=1e5, plot=False, docompile=False):
@@ -203,7 +205,10 @@ def mcstasRun(modes=None, n=1e5, plot=False, docompile=False):
 
     if docompile:
         # compile
-        mcexe.compileInstrument(statinfo=False, shielding=False, verify=False)
+        out = mcexe.compileInstrument(statinfo=False, shielding=False, 
+                                      verify=False)
+        if not out:
+            print('WARNING: could not compile instrument file.')
         
     counts = max(10000,n)
     # derive timeout from counts
@@ -215,24 +220,30 @@ def mcstasRun(modes=None, n=1e5, plot=False, docompile=False):
         modes = BMOD.getModeKeys()
     elif isinstance(modes,str) and (not modes=='DS1'):
         modeid = modes
-        
+    datas = None
     # execute simulation for a single mode:
     if modeid:
-        mcexe.runSimulation(modeid, n=counts)
-        # process output files and get a list of data objects
-        datas = mcexe.processRun(modeid)
-        # plot the retrieved data
-        if plot:
-            mcexe.plotResults(datas, title='McStas '+modeid, pdf=modeid)
+        out = mcexe.runSimulation(modeid, n=counts)
+        if out:
+            # process output files and get a list of data objects
+            datas = mcexe.processRun(modeid)
+            # plot the retrieved data
+            if plot:
+                mcexe.plotResults(datas, title='McStas '+modeid, pdf=modeid)
+        else:
+            print('Simulation not completed.')
 
     # execute simulation for multiple modes:
     else:
-        mcexe.runModes(modes=modes, counts=counts, timeout=timeout)
-        # retrieve results:
-        datas = mcexe.processResults(modes)
-        # plot the retrieved results:
-        if plot:
-            mcexe.plotResults(datas, title='McStas', pdf='results')
+        out = mcexe.runModes(modes=modes, counts=counts, timeout=timeout)
+        if out:
+            # retrieve results:
+            datas = mcexe.processResults(modes)
+            # plot the retrieved results:
+            if plot:
+                mcexe.plotResults(datas, title='McStas', pdf='results')
+        else:
+            print('Simulation not completed.')
     return datas
 
 #%% SIMRES
@@ -324,8 +335,11 @@ def simresRun(modes=None, n=10000, plot=False, runsetup=False):
         
     # run setup script if requested
     if runsetup:
-        simexe.runSetup(verify=False)
-
+        out = simexe.runSetup(verify=False)
+        if not out:
+            raise Exception('Cannot run setup script.')
+    
+    datas = None
     counts = max(500,n)
     # derive timeout from counts
     timeout = int(counts/10)+300
@@ -344,25 +358,30 @@ def simresRun(modes=None, n=10000, plot=False, runsetup=False):
         downmodes = ['F0', 'F1']
         up = not (modeid in downmodes)
         # execute simulation:
-        simexe.runSimulation(modeid, ncnt=counts, upstream=up, timeout=timeout)
-        
-        # process output files and get a list of data objects
-        datas = simexe.processRun(modeid)
-        
-        # plot the retrieved data
-        if plot:
-            simexe.plotResults(datas, title='SIMRES '+modeid, pdf=modeid)        
+        out = simexe.runSimulation(modeid, ncnt=counts, upstream=up, timeout=timeout)
+        if out:
+            # process output files and get a list of data objects
+            datas = simexe.processRun(modeid) 
+            # plot the retrieved data
+            if plot:
+                simexe.plotResults(datas, title='SIMRES '+modeid, pdf=modeid)
+        else:
+            print('Simulation not completed.')
 
     # execute simulation for multiple modes:
     else:
         print('\nStaring simulation for {}'.format(','.join(modes)))
         # execute simulation:
-        simexe.runModes(modes=modes, counts=counts, timeout=timeout, verify=False)
-        # retrieve results:
-        datas = simexe.processResults(modes)
-        # plot the retrieved results:
-        if plot:
-            simexe.plotResults(datas, title='SIMRES', pdf='results')
+        out = simexe.runModes(modes=modes, counts=counts, timeout=timeout, 
+                              verify=False)
+        if out:
+            # retrieve results:
+            datas = simexe.processResults(modes)
+            # plot the retrieved results:
+            if plot:
+                simexe.plotResults(datas, title='SIMRES', pdf='results')
+        else:
+            print('Simulation not completed.')
     return datas
 
 
@@ -372,8 +391,7 @@ def plotResults(datas, pdf=''):
     
     Optionally, provide output PDF file name (without extension) as argument. 
     """
-    if len(datas)<=0:
-        return
+    if not datas or len(datas)<=0: return
     dformat = datas[0].dformat
     if dformat=='mcstas':
         mcexe.plotResults(datas, title='McStas', pdf=pdf)

@@ -32,7 +32,6 @@ indent = '   '
 # global private variables
 _WAV = None # waviness [deg]
 _SHIELDING = False # add shielding calculator for required section
-_VERBOSE = False # print additional info on console
 
 # define special types:
 TJump = 'TJump'
@@ -105,7 +104,7 @@ def getMcStasComp(comp):
 # %% Functions for collecting info about components
 
 
-def infoSegments(key, seg=500., gap=0.2):
+def infoSegments(key, seg=500., gap=1.0, m=None):
     """ Info about guide segments.
     
     Divides the guide into segments of required length 
@@ -116,16 +115,54 @@ def infoSegments(key, seg=500., gap=0.2):
     ---------
     key: str
         component ID
-    seg: float
-        required segment length, mm
+    seg: float or list
+        required segment length(s), mm
     gap: float
         required gap between segments
+    m: list 
+        m-values for segments, for each give a list [mL, mR, mT, mB]
+        Only if seg is a list, must have the same length.
     
     Returns:
     -------
-    list of dist, len, w1, h1, w2, h2, angle] for each segment
+    list of [dist, len, w1, h1, w2, h2, angle] for each segment
         coordinates of each element, relative preceding segment [mm,deg]
     """
+    def getMList(comp, seg, m):
+        mseg = []
+        nr = 0
+        if m and isinstance(m,list):
+            nr = np.shape(m)[0]
+        # m must have the same number of rows as seg.  
+        # Otherwise, use m-values from comp for all segments
+        if not nr==len(seg):
+            mseg = len(seg)*[comp['m']]        
+        # number of segments agrees: 
+        else:
+            msh = np.shape(m)
+            # 1-D list, use the same m for all walls
+            if len(msh)==1:
+                # same m for all walls
+                m1 = np.array([m,m,m,m]).T
+                mseg = list(m1)
+            # 2-D list: 
+            elif len(msh)==2:
+                if msh[1]==1:
+                    # same m for all walls
+                    m1 = np.array([m,m,m,m]).T
+                    mseg = list(m1) 
+                elif msh[1]==2:
+                    # same m for left/right and top/bottom
+                    m1 = np.array([m[:,0],m[:,0],m[:,1],m[:,1]]).T
+                    mseg = list(m1) 
+                elif msh[1]==4:
+                    # different values for left, right, top, bottom
+                    mseg = m
+            # something went wrong: use m-values from comp
+            if not nr==len(mseg):
+                mseg = len(seg)*[comp['m']]
+        return mseg
+    
     comp = BC.BEER[key]
     zin = comp['start']
     zout = comp['end']
@@ -153,7 +190,6 @@ def infoSegments(key, seg=500., gap=0.2):
             d += seg[i] 
         last = L - sum(sg)
         sg += [last]
-    
     nseg = len(sg)
     segments = []
     d = 0.
@@ -166,6 +202,8 @@ def infoSegments(key, seg=500., gap=0.2):
     # get entry axis angle, cos and sin
     a0 = BG.beamAngle(zin, coord = 'ISCS')
     mm = 0.001
+    # get m-values for segments
+    mvals = getMList(comp, sg, m)
     for i in range(nseg):
         # nominal segment length
         Lseg = sg[i]
@@ -185,31 +223,12 @@ def infoSegments(key, seg=500., gap=0.2):
         ah = (x2 + 0.5*w2 - x1 - 0.5*w1)/L
         av = (0.5*h2 - 0.5*h1)/L
         s = [z*mm, L*mm, w1*mm, h1*mm, w2*mm, h2*mm, a/deg, ah/deg, av/deg]
+        # add m-values for segments
+        s.append(mvals[i])
         segments.append(s)
         z0 = z1
         a0 = a1
         d += Lseg
-        
-    if (nseg>1 and _VERBOSE):
-        print('{}, {:d} segments: z, length, width, height, dah, dav [deg]'.format(key,nseg))
-        fmt1 = '{:.1f}\tx\t{:.2f}\t{:.2f}\tx\tx'
-        s = segments[0]
-        print(fmt1.format(zin+s[0]*1000, s[2]*1000, s[3]*1000))
-        fmt = '{:.1f}\t{:.1f}\t{:.2f}\t{:.2f}\t{:g}\t{:g}'
-        ah1 = s[7]
-        av1 = s[8]
-        z0 = s[0] + zin*mm
-        for i in range(1,nseg):
-            s = segments[i]
-            dah = s[7]-ah1
-            dav = s[8]-av1
-            ah1 = s[7]
-            av1 = s[8]
-            z0 += s[0]
-            fmt = '{:.1f}\t{:.1f}\t{:.2f}\t{:.2f}\t{:g}\t{:g}'
-            print(fmt.format(z0*1000, s[1]*1000, s[2]*1000, s[3]*1000, dah, dav))       
-        print(fmt1.format((z0+s[1])*1000, s[4]*1000, s[5]*1000))        
-            
     return segments
    
     
@@ -430,7 +449,7 @@ def infoCollimator(key):
     info.update(infoPos(key))
     return info 
 
-def infoGuideSegmented(key, seg=500.0, gap=1.0):
+def infoGuideSegmented(key, **kwargs):
     """
     Create info with properties of a segmented guide.
     This guide is written in a McStas instrument code as an Arm, which defines
@@ -442,10 +461,6 @@ def infoGuideSegmented(key, seg=500.0, gap=1.0):
     
     key: str
         component ID
-    seg: float
-        required segment length, mm
-    gap: float
-        required gap between segments, mm
         
     Return:
     -------
@@ -461,7 +476,7 @@ def infoGuideSegmented(key, seg=500.0, gap=1.0):
     info['RH'] = '{:g}'.format(RH)
     if (_WAV is not None):
         info['wav'] = '{:.5f}'.format(_WAV)
-    info['segm'] = infoSegments(key,seg=seg, gap=gap)
+    info['segm'] = infoSegments(key, **kwargs)
     return info
 
 def infoGuideTapering(key, nseg=1, isTilted=False, ellH='', ellV=''):
@@ -686,9 +701,17 @@ def addMonitor(beam, key, mtype='single'):
     mtype: str
         Monitor type. Recognized types are 'single' or 'spectrum'
     """
+    global nBMon
     item = {'info': infoMonitor(key, mtype=mtype), 'type':TMonitor}
+    n = len(beamline)
+    d = [item['info']['span'][1]]
+    stat = {'icomp': n, 'dist': d, 'nmon':nBMon, 'nseg': 1}
+    item['statinfo'] = stat
+    nBMon += 1
     beam.append(item)
-    beamline.append(item)    
+    item['idx'] = n
+    beamline.append(item)   
+    
 
 def addComponent(typ, beam, key, **kwargs):
     """
@@ -777,6 +800,7 @@ def addComponent(typ, beam, key, **kwargs):
         addToList(a)
         nBMon += 1
         beam.append(a)
+        a['idx'] = n
         beamline.append(a)
         item = {'info': infoGuideSegmented(key, **kwargs), 'type':TGuideSeg, 'relto':ID}
         
@@ -803,6 +827,7 @@ def addComponent(typ, beam, key, **kwargs):
     item['statinfo'] = stat
     nBMon += nseg
     beam.append(item)
+    item['idx'] = n
     beamline.append(item)
 
 
@@ -1170,7 +1195,7 @@ def compEGuideGravity(info, relto='ISCS'):
 def compGuideSegment(info, iseg, seginfo):
     ID = info['ID']
     IDseg = '{}_{}'.format(ID,iseg)
-    [dist, L, w1, h1, w2, h2, angle, ah, av]  = seginfo[iseg] # rel. preceding segment [m, deg]
+    [dist, L, w1, h1, w2, h2, angle, ah, av, m4]  = seginfo[iseg] # rel. preceding segment [m, deg]
     tab = '\t'
     out = 'COMPONENT c{} = {}(\n'.format(IDseg,getMcStasComp(TGuide))
     fmt = 'l = {:.5g}, w1 = {:.5g}, h1 = {:.5g}, w2 = {:.5g}, h2 = {:.5g},\n'
@@ -1180,8 +1205,12 @@ def compGuideSegment(info, iseg, seginfo):
     else:
         fmt = 'R0 = R_0, alpha = m_alpha, Qc = m_Qc, W = m_W,\n'
     out += tab+fmt.replace('@C',ID)
-    fmt = 'mleft = @C.mL, mright = @C.mR, mtop = @C.mT, mbottom = @C.mB\n'
-    out += tab+fmt.replace('@C',ID)
+    
+    #fmt = 'mleft = @C.mL, mright = @C.mR, mtop = @C.mT, mbottom = @C.mB\n'
+    #out += tab+fmt.replace('@C',ID)
+    # use seginfo
+    fmt = 'mleft = {}, mright = {}, mtop = {}, mbottom = {}\n'
+    out += tab+fmt.format(*m4)
     out += ')\n'
     fmt = 'AT (0, 0, {:.5g}) RELATIVE PREVIOUS\n'
     out += fmt.format(dist)
@@ -1322,7 +1351,13 @@ def defineInstrument():
     addMonitor(beamFocusing,'GF1')
     addComponent(TSlit, beamFocusing, 'SL1')
     #addEGuideGravity(beamFocusing, 'GF2', ell='ellV2', fdir=1)
-    addComponent(TGuideSeg, beamFocusing, 'GF2', seg=500, gap=1)
+
+    # special setting for FC2: set the last ~0.5m segment blind on left/right
+    seg = 6*[500.]
+    m = BC.BEER['GF2']['m']
+    mseg = 6*[m]
+    mseg[5] = [0.0, 0.0, m[2], m[3]]
+    addComponent(TGuideSeg, beamFocusing, 'GF2', seg=seg, m = mseg, gap=1)
     addMonitor(beamFocusing,'GF2')
     addComponent(TSlit, beamFocusing, 'SL2')
     
@@ -1378,18 +1413,20 @@ def cfgBeam(beamsection, comment, statinfo):
         if not typ in skipitem:
             if (typ == TMonitor):
                 info = comp['info']
+                i = comp['idx']
+                ID = info['ID']
                 out += '\n'
-                out += '/* Monitor: {} */\n'.format(info['ID'])
-                out += indent + 'addComponent("{}");\n'.format(info['ID'])
+                out += '/* Monitor: {} */\n'.format(ID)
+                out += indent + 'addComponent("{}", {:d});\n'.format(ID, i)
             else:
                 info = comp['info']
                 out += '\n'
-                out += '/* {}: {}*/\n'.format(comp['info']['ID'], info['desc'])
+                out += '/* {}: {}*/\n'.format(info['ID'], info['desc'])
                 out += cfgComponent(comp, indent)
-                i = beamline.index(comp);
-                ID = comp['info']['ID']
+                i = comp['idx']
+                ID = info['ID']
                 out += indent + '{}.idx = {:d};\n'.format(ID, i)
-                out += indent + 'addComponent("{}");\n'.format(info['ID'])
+                out += indent + 'addComponent("{}", {:d});\n'.format(ID, i)
             if statinfo and 'statinfo' in comp:
                 out += '\n'
                 fmt = 'addBeamSegment({:g});\n'

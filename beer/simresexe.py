@@ -21,6 +21,7 @@ import beer.simres as BSIM
 import beer.components as BC
 import beer.mcplot as mcplot
 import traceback
+from subprocess import CalledProcessError, TimeoutExpired
 
 #%% Define global variables
 
@@ -555,22 +556,27 @@ def verifyJava(verbose=1):
     out = None
     res = False
     try:
-        if verbose:
-            print('\tTesting Java ... ',end='')
+        if verbose: print('\tTesting Java ... ',end='')
+        # join into one command string - lists may not run on Linux ...
+        cmd = ' '.join(cmd)
         out = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
                              universal_newlines=True, shell=True, check=True)
-        out.check_returncode()
-        if verbose:
-            print('OK.')
+        if verbose: print('OK.')
+        if out: out.check_returncode()
         res = True
-    except Exception as e:
-        if verbose:
-            print('failed.')
-        msg = 'Can\'t execute {}.\n {}\n'.format(' '.join(cmd),e)
-        if out:
-            ires = out.returncode
-            msg += 'Return code: {:d}'.format(ires)
-        sys.exit(msg)
+    except CalledProcessError as e:
+        if verbose: print('failed.')
+        msg = 'Can\'t execute {}.\n'.format(cmd)
+        msg += 'Return code: {:d}\n'.format(e.returncode)
+        if e.stderr: msg += 'stderr:\n'+e.stderr +'\n'
+        if e.stdout: msg += 'stdout:\n'+e.stdout +'\n'
+        print(msg)
+        return res
+    except TimeoutExpired as e:
+        if verbose: print('timeout at {} s.'.format(e.timeout))
+        return res
+    except Exception:
+        print('Error while executing {}'.format(cmd))
         traceback.print_exc(file=sys.stdout)
     return res
 
@@ -625,9 +631,9 @@ def runScript(config=None, script='BEER_setup.inp', log='',
         raise Exception('Script {} does not exist.'.format(scrfull))
 
     # compose command
-    cmd = [config['JAVA'], '-jar', sim['jar']]
+    cmd = [config['JAVA'], '-jar', '"'+sim['jar']+'"']
     # options
-    cmd.extend(['-g', sim['GUI']]) # path to GUI directory
+    cmd.extend(['-g', '"'+sim['GUI']+'"']) # path to GUI directory
     cmd.extend(['-p', config['PRJFILE']]) # project config. file name
     cmd.extend(['-c', config['CFGFILE']]) # instrument config. file name
     cmd.extend(['-s', script]) # script name 
@@ -636,28 +642,37 @@ def runScript(config=None, script='BEER_setup.inp', log='',
         cmd.extend(['-o', log+'.html']) # html output file
         cmd.extend(['-log', log+'.log']) # console output text file
     out = None
+    res = False
     try:
 # for Python >= 3.7 :
 #        out = subprocess.run(cmd, capture_output=True, text=True, shell=True, check=True)
 # for Python < 3.7 :
-        print('Command:\n'+' '.join(cmd))
+        # join into one command string - lists may not run on Linux ...
+        cmd = ' '.join(cmd)
+        print('Command:\n{}\n'.format(cmd))
         print('Running ... ',end='')
         out = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
                              universal_newlines=True, shell=True, check=True,
                              timeout=timeout)
         out.check_returncode()
         print('done.')
-    except Exception as e:
-        msgdata = cmd[:3]
-        msg = 'Can\'t execute {} {} {}.\n {}\n'.format(*msgdata,e)
-        if out:
-            ires = out.returncode
-            msg += 'Return code: {:d}'.format(ires)
-        sys.exit(msg)
+        if verbose and out.stdout: print(out.stdout)
+        res = True
+    except CalledProcessError as e:
+        if verbose: print('failed.')
+        msg = 'Can\'t execute {}.\n'.format(cmd)
+        msg += 'Return code: {:d}\n'.format(e.returncode)
+        if e.stderr: msg += 'stderr:\n'+e.stderr +'\n'
+        if e.stdout: msg += 'stdout:\n'+e.stdout +'\n'
+        print(msg)
+        return res
+    except TimeoutExpired as e:
+        if verbose: print('timeout at {} s.'.format(e.timeout))
+        return res
+    except Exception:
+        print('Error while executing {}'.format(cmd))
         traceback.print_exc(file=sys.stdout)
-    if verbose>=0:
-        print(out.stdout) 
-    return out
+    return res
 
 
 def runSimulation(mode, config=None, ncnt=10000, upstream=True, verbose=1,
@@ -709,7 +724,11 @@ def runSimulation(mode, config=None, ncnt=10000, upstream=True, verbose=1,
                     timeout=timeout, 
                     verbose=verbose)
     if out:
-        print('\nSee results in '+config['OUTPATH'])
+        print('See results in "{}".\n'.format(config['OUTPATH']))
+    else:
+        src = os.path.basename(__file__)
+        print('{}.runSimulation: Execution failed'.format(src))
+    return out
 
 
 def runSetup(verify=True):
@@ -739,7 +758,11 @@ def runSetup(verify=True):
                            save=os.path.join(config['CFGPATH'],config['CFGFILE']))
     
     # Run SIMRES to execute BEER_setup.inp
-    runScript(script='BEER_setup.inp', log='setup')
+    res = runScript(script='BEER_setup.inp', log='setup')
+    if not res:
+        src = os.path.basename(__file__)
+        print('{}.runSimulation: Execution failed'.format(src))
+    return res
 
 
 def runModes(modes=[], counts=1000, timeout=600, verify=True):
@@ -769,15 +792,17 @@ def runModes(modes=[], counts=1000, timeout=600, verify=True):
     # modes to be simulated in down-stream direction
     downmodes = ['F0', 'F1']
     config = getSimresConfig()
+    res = (len(modes)>0)
     for m in modes:
         imode = BMOD.getModeIndex(m)
         if (imode>=0):
             up = not (m in downmodes)
             try:
-                runSimulation(m, config=config, ncnt=counts, upstream=up, 
-                                  timeout=timeout)
+                res = res and runSimulation(m, config=config, ncnt=counts, 
+                                            upstream=up, timeout=timeout)
             except Exception as e:
                 print(e)
+    return res
 
 
 #%% Process and plot results

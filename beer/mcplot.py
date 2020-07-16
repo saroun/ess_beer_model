@@ -473,7 +473,7 @@ def processResults(results, dataname='Lmon.dat', parentdir='./', outfile='',
         with open(fout, 'w') as fo:
             fo.write(out)
             fo.close()
-        print('Table of intensities saved in {}\n'.format(fout))
+        print('Table of intensities saved in "{}"\n'.format(fout))
     return datas
 
 
@@ -564,7 +564,7 @@ def plotDataSet(datas, yscale=1, title='', pdf=''):
         if not pname.endswith('.pdf'):
             pname += '.pdf'
         plt.savefig(pname, bbox_inches='tight')
-        print('Plot saved as '+pname)
+        print('Plot saved as "{}"'.format(pname))
     plt.show()
 
 

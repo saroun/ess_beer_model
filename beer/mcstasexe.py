@@ -26,6 +26,7 @@ from beer.utils import copyResources
 import beer.modes as BMOD
 import beer.mcstas as BMC
 import beer.mcplot as mcplot
+from subprocess import CalledProcessError, TimeoutExpired
 
 #%% Define global variables
 
@@ -401,16 +402,22 @@ def compileInstrument(statinfo=False, shielding=False, inpath=None, verify=True)
         return
     
     # run compiler using the script compile.* from resources
-
+    res = False
     out = None
     scr = os.path.join(config['WORKPATH'],mcstas['cmd'])
+    if not os.path.isfile(scr):
+        print('Compilation script not found: "{}"'.format(scr))
+        return res
     try:
         # remove *.c file
         fc = os.path.join(config['WORKPATH'],config['INSTR']+'.c')
         if os.path.isfile(fc):
             os.remove(fc)
         cmd = [mcstas['cmd'], config['INSTR']]
-        print('\nCommand: '+' '.join(cmd))
+        
+        # join into one command string - lists may not run on Linux ...
+        cmd = ' '.join(cmd)
+        print('Command: '+cmd)
         print('Compiling ... ',end='')
 # for Python >= 3.7 :
 #        out = subprocess.run(cmd, capture_output=True, text=True, shell=True, check=True)
@@ -421,15 +428,22 @@ def compileInstrument(statinfo=False, shielding=False, inpath=None, verify=True)
                              timeout=1000)
         out.check_returncode()
         print('done.')
-    except Exception as e:
-        if out:
-            print(out.stdout)
-        msg = 'ERROR: Execution of {} failed\n{}\n'.format(scr,e)
-        if out:
-            ires = out.returncode
-            msg += 'Return code: {:d}'.format(ires)
-        sys.exit(msg)
-        traceback.print_exc(file=sys.stdout)  
+        res = True
+    except CalledProcessError as e:
+        print('failed.')
+        msg = 'Can\'t execute {}.\n'.format(cmd)
+        msg += 'Return code: {:d}\n'.format(e.returncode)
+        if e.stderr: msg += 'stderr:\n'+e.stderr +'\n'
+        if e.stdout: msg += 'stdout:\n'+e.stdout +'\n'
+        print(msg)
+        return res
+    except TimeoutExpired as e:
+        print('timeout at {} s.'.format(e.timeout))
+        return res
+    except Exception:
+        print('Error while executing {}'.format(cmd))
+        traceback.print_exc(file=sys.stdout)
+    return res
 
 
 #%% Run simulations
@@ -443,8 +457,8 @@ def verifyConfig(verbose=1):
         config = getMcStasConfig()
         checkConfig(config)
         if verbose:
-            print('Path to McStas instrument executable: {}'.format(config['WORKPATH']))
-            print('Simulation output directory: {}'.format(config['OUTPATH']))
+            print('Workspace directory: "{}"'.format(config['WORKPATH']))
+            print('Simulation output directory: "{}"'.format(config['OUTPATH']))
             print('McStas instrument executable: {}'.format(config['EXE'])) 
         res = True
     except Exception as e:
@@ -491,20 +505,29 @@ def verifyMcStas(verbose=1):
         try:
             if verbose:
                 print('\tTesting {} ... '.format(cmd[0]),end='')
+            # join into one command string - lists may not run on Linux ...
+            cmd = ' '.join(cmd)
             out = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
                                  universal_newlines=True, shell=True, check=True)
             out.check_returncode()
             if verbose:
                 print('OK.')
-                print(out.stdout)
+                if out.stdout: print(out.stdout)
             q = True
-        except Exception as e:
-            msg = 'Can\'t execute {}.\n {}\n'.format(' '.join(cmd),e)
-            if out:
-                ires = out.returncode
-                msg += 'Return code: {:d}'.format(ires)
-                print(msg)
-                traceback.print_exc(file=sys.stdout)            
+        except CalledProcessError as e:
+            print('failed.')
+            msg = 'Can\'t execute {}.\n'.format(cmd)
+            msg += 'Return code: {:d}\n'.format(e.returncode)
+            if e.stderr: msg += 'stderr:\n'+e.stderr +'\n'
+            if e.stdout: msg += 'stdout:\n'+e.stdout +'\n'
+            print(msg)
+            return q
+        except TimeoutExpired as e:
+            print('timeout at {} s.'.format(e.timeout))
+            return q
+        except Exception:
+            print('Error while executing {}'.format(cmd))
+            traceback.print_exc(file=sys.stdout)
         return q
     
     mcstas = getMcStas()
@@ -595,7 +618,7 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
     
     # define -d parameter 
     # for relative outname, we must take it relative to WORKPATH
-    # since simulation runs in WORKPATH
+    # since simulations run in WORKPATH
     if not os.path.isabs(outname):
         respath = os.path.relpath(outname, config['WORKPATH'])
     else:
@@ -614,6 +637,7 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
         
     # try to run it    
     out = None
+    res = False
     try:
         print('\nCommand:\n'+' '.join(cmd))
         print('Running ... ',end='')
@@ -626,21 +650,30 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
                              timeout=timeout)
         out.check_returncode()
         print('done.')
-    except Exception as e:
-        msg = 'Can\'t execute {}.\n {}\n'.format(exename,e)
-        if out:
-            ires = out.returncode
-            msg += 'Return code: {:d}'.format(ires)
-        sys.exit(msg)
-        traceback.print_exc(file=sys.stdout)    
-    if out:
+        res = True
+    except CalledProcessError as e:
+        if verbose: print('failed.')
+        msg = 'Can\'t execute {}.\n'.format(cmd)
+        msg += 'Return code: {:d}\n'.format(e.returncode)
+        if e.stderr: msg += 'stderr:\n'+e.stderr +'\n'
+        if e.stdout: msg += 'stdout:\n'+e.stdout +'\n'
+        print(msg)
+        return res
+    except TimeoutExpired as e:
+        if verbose: print('timeout at {} s.'.format(e.timeout))
+        return res
+    except Exception:
+        print('Error while executing {}'.format(cmd))
+        traceback.print_exc(file=sys.stdout)
+    if res and out.stdout:
         if not quiet: print(out.stdout)
         # save stdout in log file
         fout = os.path.join(outname,modeid+'.log')
         with open(fout, 'w') as f: 
             f.write(out.stdout)
             f.close()
-        print('\nSee results in '+outname)
+        print('See results in "{}"\n'.format(outname))
+    return res                            
 
 
 def runModes(modes=[], counts=1e6, timeout=3600):
@@ -679,7 +712,7 @@ def runModes(modes=[], counts=1e6, timeout=3600):
             modes.extend(['DS1_0','DS1_-1'])
         if not 'DS1_-1' in modes:
             modes.extend(['DS1_0','DS1_-1'])
-    
+    res = (len(modes)>0)
     for m in modes:
         sm = m.split('_')
         npls=0
@@ -690,10 +723,11 @@ def runModes(modes=[], counts=1e6, timeout=3600):
         imode = BMOD.getModeIndex(sm[0])
         if (imode>=0):
             try:
-                runSimulation(sm[0], n=counts, npulse=npls, 
+                res = res and runSimulation(sm[0], n=counts, npulse=npls, 
                                   timeout=timeout, outdir=m, quiet=True)
             except Exception as e:
                 print(e)
+    return res 
 
 
 #%% Process and plot results
