@@ -78,7 +78,8 @@ beamFocusing = []
 
 
 
-nBMon = 0;
+nBMon = 0 # counter of monitors for statinfo 
+nComp = 0 # counter of components for statinfo
 
 
 # return corresponding McStas component type
@@ -701,15 +702,15 @@ def addMonitor(beam, key, mtype='single'):
     mtype: str
         Monitor type. Recognized types are 'single' or 'spectrum'
     """
-    global nBMon
+    global nBMon,nComp
     item = {'info': infoMonitor(key, mtype=mtype), 'type':TMonitor}
-    n = len(beamline)
     d = [item['info']['span'][1]]
-    stat = {'icomp': n, 'dist': d, 'nmon':nBMon, 'nseg': 1}
+    stat = {'icomp': nComp, 'dist': d, 'nmon':nBMon, 'nseg': 1}
     item['statinfo'] = stat
     nBMon += 1
+    nComp += 1
     beam.append(item)
-    item['idx'] = n
+    item['idx'] = nComp
     beamline.append(item)   
     
 
@@ -719,7 +720,7 @@ def addComponent(typ, beam, key, **kwargs):
     It dispatches calls to individual components add functions and collects
     necessary information.
     """
-    global nBMon, listComp
+    global nBMon, nComp, listComp
         
     def addToList(item):
         """
@@ -793,14 +794,14 @@ def addComponent(typ, beam, key, **kwargs):
         dist = comp['dist']
         ID = 'Arm'+key
         a = dataArm(beam, ID, dist=dist)
-        n = len(beamline)
         d = [a['info']['span'][1]]
-        stat = {'icomp': n, 'dist': d, 'nmon':nBMon, 'nseg': 1}
+        stat = {'icomp': nComp, 'dist': d, 'nmon':nBMon, 'nseg': 1}
         a['statinfo'] = stat
         addToList(a)
         nBMon += 1
+        nComp += 1
         beam.append(a)
-        a['idx'] = n
+        a['idx'] = nComp
         beamline.append(a)
         item = {'info': infoGuideSegmented(key, **kwargs), 'type':TGuideSeg, 'relto':ID}
         
@@ -810,7 +811,6 @@ def addComponent(typ, beam, key, **kwargs):
         addToList(item)
     
     # define statinfo: data for counting statistics
-    n = len(beamline)
     if (typ==TGuideSeg):
         sgm = item['info']['segm']
         nseg = len(sgm)
@@ -823,11 +823,12 @@ def addComponent(typ, beam, key, **kwargs):
     else:
         d = [item['info']['span'][1]]
         nseg = 1
-    stat = {'icomp': n, 'dist': d, 'nmon':nBMon, 'nseg': nseg}
+    stat = {'icomp': nComp, 'dist': d, 'nmon':nBMon, 'nseg': nseg}
     item['statinfo'] = stat
     nBMon += nseg
+    nComp += 1
     beam.append(item)
-    item['idx'] = n
+    item['idx'] = nComp
     beamline.append(item)
 
 
@@ -1271,11 +1272,12 @@ def traceComponent(comp, statinfo, relto='ISCS'):
 # %% Define BEER instrument components
     
 def defineInstrument():
-    global nBMon
+    global nBMon,nComp
     global beamMonolith, beamBunker, beamTransport, beamFocusing, beamline
     global listComp
     global _SHIELDING
     nBMon = 0
+    nComp = 0
     beamline.clear()
     beamMonolith.clear()
     beamBunker.clear()
@@ -1362,6 +1364,8 @@ def defineInstrument():
     addComponent(TSlit, beamFocusing, 'SL2')
     
     addComponent(TGuide, beamFocusing,'GMINI')
+    addMonitor(beamFocusing,'GMINI')
+
     #addComponent(TGuideSeg, beamFocusing, 'GEX1', seg=150, gap=1)
     
     # Start of the guide exchanger
@@ -1719,7 +1723,7 @@ def getInstrFile(instrname = 'BEER_reference', inpath=None,
             if (line.find('@')>-1): line = line.replace('@TEMPLATE', template)
             if (line.find('@')>-1): line = line.replace('@SOURCE', 'beer.mcstas')
             if (line.find('@')>-1): line = line.replace('@NAME', instrname)
-            if (line.find('@')>-1): line = line.replace('@MAXCOMP', str(len(beamline)))
+            if (line.find('@')>-1): line = line.replace('@MAXCOMP', str(nComp))
             if (line.find('@')>-1): line = line.replace('@MAXMON', str(nBMon))
             if (line.find('@')>-1): line = line.replace('@MAXMODE', str(len(BM.modes)-1))
             if (line.find('@')>-1): 

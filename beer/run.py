@@ -14,19 +14,23 @@ import beer.run as do
  
 do.mcstasConfig(BINPATH='/usr/bin', MCSTAS='/usr/share/mcstas/2.6')
 
+# create instrument file 
+import beer.mcstasexe
+beer.mcstasexe.createInstrFile(statinfo=False, shielding=False)
+
 # compile instrument file  
 
-do.mcstasCompile(statinfo=False, shielding=False, force=False)
+do.mcstasCompile(force=False)
 
 # run simulation for one modes
 
-result =do.mcstasRun(modes='PS2', n=1e7, docompile=False, plot=True)
+result =do.mcstasRun(modes='PS2', n=1e7, plot=True)
 
 # or run simulation for all modes 
  
 import beer.modes
 
-result = do.mcstasRun(modes=beer.modes.getModeKeys() , n=1e7, docompile=False, plot=True)
+result = do.mcstasRun(modes=beer.modes.getModeKeys(), n=1e7, plot=True)
 
 # to replot results:  
 
@@ -40,10 +44,6 @@ import beer.run as do
 # configure SIMRES environment (provide path to java command)
 
 do.simresConfig(java='java')
-
-# compile instrument file
-
-do.mcstasCompile(statinfo=False, shielding=False, force=False)
 
 # run simulation for one mode
 
@@ -59,6 +59,11 @@ result = do.simresRun(modes=beer.modes.getModeKeys(), n=10000, runsetup=False, p
 
 do.plotResults(result, pdf='myresult')
 
+# If beamline configuration has changed, you can update the instrument file:
+
+import beer.simresexe as simexe
+
+simexe.runSetup()
 
 ----------------------------------------
 Created on Mon Jul 13 17:07:39 2020
@@ -111,16 +116,12 @@ def mcstasConfig(workpath='', BINPATH='', MCSTAS='', MCSTAS_CC='gcc',
     _IS_MCSTAS = mcexe.verifyMcStas()
 
 
-def mcstasCompile(statinfo=False, shielding=False, force=False):
+def mcstasCompile(force=False):
     """
     Compile default instrument file. 
     
     Parameters:
     ----------
-    statinfo: boolean
-        if true, the simulation will produce tracing statistics
-    shielding: boolean
-        if true, the instrument file will include shielding logger
     force: boolean
         if false, compile only if the target executable does not exist
     
@@ -151,9 +152,7 @@ def mcstasCompile(statinfo=False, shielding=False, force=False):
         print('Try to run {}.mcstasConfig() again.'.format(fn))
         return
 
-    out = mcexe.compileInstrument(statinfo=statinfo, 
-                                shielding=shielding, 
-                                verify=False)
+    out = mcexe.compileInstrument(verify=False)
     if not out:
         print('WARNING: could not compile instrument file')
     

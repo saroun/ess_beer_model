@@ -76,16 +76,16 @@ exe.mcstasConfig(workpath='', BINPATH=r'C:\mcstas-2.6\bin', MCSTAS=r'C:\mcstas-2
 # To re-create instrument file (set also force=True to mcstasCompile):
 """
 import beer.mcstasexe
-beer.mcstasexe.createInstrFile(statinfo=False, shielding=True)
+beer.mcstasexe.createInstrFile(statinfo=False, shielding=False)
 """
 
 # Compile:
-exe.mcstasCompile(statinfo=False, shielding=False, force=False)
+exe.mcstasCompile(force=False)
 
 #%% Run a single simulation for given BEER mode
 
 """
-data = exe.mcstasRun(modes='PS2', n=counts, docompile=False, plot=True)
+data = exe.mcstasRun(modes='F0', n=counts, plot=True)
 """
 
 #%% Run a sequence of simulations for multiple modes defined in beer.modes
@@ -96,10 +96,9 @@ data = exe.mcstasRun(modes='PS2', n=counts, docompile=False, plot=True)
 modes = BMOD.getModeKeys() 
 
 # or define own list. Call BMOD.listModes() to get a list of defined modes:
-# modes = ['F0', 'PS0', 'M1']
+#modes = ['F0', 'PS0', 'M1']
  
 # execute simulation for these modes:
-data = exe.mcstasRun(modes=modes, n=counts, docompile=False, plot=True)
+data = exe.mcstasRun(modes=modes, n=counts, plot=True)
 
-#"""
 

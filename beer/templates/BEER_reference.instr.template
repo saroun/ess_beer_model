@@ -241,6 +241,7 @@ typedef struct  {
 // for counting statistics
   typedef struct {
 	  char id[10];
+      int idx;
 	  long cnt;
 	  double sum;
   } TStat;
@@ -436,8 +437,9 @@ int nMonitors = 0;
 long srccount; 
  
 /* Add a component to count statistics */ 
-void addComponent(char *id) {
+void addComponent(char *id, int idx) {
 	strcpy(stats[nComponents].id, id);
+    stats[nComponents].idx = idx;
 	stats[nComponents].cnt = 0;
 	stats[nComponents].sum = 0.0;
 	nComponents ++;
@@ -472,7 +474,7 @@ void printStat() {
    if (hfile) fprintf(hfile, "Counting statistics [ID, sum, counts, eff_rel, eff]:\n");
    for (i=0;i<nComponents;i++) {
       if  (stats[i].cnt>0) {
-         printf("[%d] %s:\t%g\t%ld\t%g\t%g\n",i ,stats[i].id, stats[i].sum, stats[i].cnt, effRel[i], eff[i]);
+         printf("[%d] %s:\t%g\t%ld\t%g\t%g\n",stats[i].idx ,stats[i].id, stats[i].sum, stats[i].cnt, effRel[i], eff[i]);
          if (hfile) fprintf(hfile, "%s:\t%g\t%ld\t%g\t%g\n",stats[i].id, stats[i].sum, stats[i].cnt, effRel[i], eff[i]);
       }
    }

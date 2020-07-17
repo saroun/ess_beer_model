@@ -355,7 +355,7 @@ def createInstrFile(statinfo = False, shielding=False, inpath=None):
                   shielding=shielding)
 
 
-def compileInstrument(statinfo=False, shielding=False, inpath=None, verify=True):
+def compileInstrument(verify=True):
     """
     Attempts to compile instrument file specified in config.
     No validation of McStas compiler is done. It is assumed that
@@ -364,13 +364,6 @@ def compileInstrument(statinfo=False, shielding=False, inpath=None, verify=True)
     
     Parameters:
     -----------
-    statinfo: boolean
-        if true, the simulation will produce tracing statistics
-    shielding: boolean
-        if true, the instrument file will include shielding logger
-    inpath: str
-        path where to search for instrument template. If not defined, use
-        package resources.
     verify:
         If true, verify first that mcstas is configured properly
         by calling verifyMcStas()
@@ -396,7 +389,7 @@ def compileInstrument(statinfo=False, shielding=False, inpath=None, verify=True)
     config = getMcStasConfig()
     instfile = os.path.join(config['WORKPATH'],config['INSTR']+'.instr')
     if not os.path.isfile(instfile):
-        createInstrFile(statinfo=statinfo, shielding=shielding)
+        createInstrFile(statinfo=False, shielding=False)
     if not os.path.isfile(instfile):
         print('ERROR: Instrument file is missing: {}'.format(instfile))
         return
