@@ -391,14 +391,19 @@ def createScriptSetup(file = 'BEER_setup.inp', outpath='', save=''):
     save: str
         Optional instrument file name to save at the end of script
     """
-    if (file != ''):
+    if file:
         outfile = os.path.normpath(os.path.join(outpath,file))
         out = cfgMonolithSection()
         out += cfgChopperSection()
         out += cfgBunkerSection()
         out += cfgTransportSection()
         out += cfgFocusingSection()
+        
         if save:
+            # we must use absolute path from the SIMRES script, 
+            # otherwise output goes to output directory
+            if not os.path.isabs(save):
+                save = os.path.abspath(save)            
             out += 'cmd SAVE FILE {}\n'.format(save)
             out += 'do SAVE\n'
         with open(outfile, 'w') as f: 
