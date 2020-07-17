@@ -406,7 +406,11 @@ def compileInstrument(verify=True):
         fc = os.path.join(config['WORKPATH'],config['INSTR']+'.c')
         if os.path.isfile(fc):
             os.remove(fc)
-        cmd = [mcstas['cmd'], config['INSTR']]
+        if 'SHELL' in env:
+            cmd = [env['SHELL']]
+        else:
+            cmd = []
+        cmd = cmd + [mcstas['cmd'], config['INSTR']]
         
         # join into one command string - lists may not run on Linux ...
         cmd = ' '.join(cmd)
@@ -622,7 +626,8 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
     smode = 'mode={:d}'.format(imode)
     snpls = 'npulse={:d}'.format(npulse)
     sv = 'verbose={:d}'.format(int(max(0,verbose)))
-    cmd = [config['EXE'],'-n', sn, smode, sv, snpls,'-d', respath]
+    ename = os.path.join('.',config['EXE'])
+    cmd = [ename,'-n', sn, smode, sv, snpls,'-d', respath]
     
     # clean output path if exists
     if os.path.exists(outname):
@@ -632,7 +637,8 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
     out = None
     res = False
     try:
-        print('\nCommand:\n'+' '.join(cmd))
+        cmd = ' '.join(cmd)
+        print('Command: '+cmd)
         print('Running ... ',end='')
 # for Python >= 3.7 :
 #        out = subprocess.run(cmd, capture_output=True, text=True, shell=True, check=True)

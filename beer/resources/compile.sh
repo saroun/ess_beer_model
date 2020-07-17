@@ -1,17 +1,19 @@
 #!/bin/bash
 # Set environment if not done already:
 # ------------------------------------------------
-# ver=2.6
+# ver=2.6.1
 # MCSTAS=/usr/share/mcstas/$ver
 # MCSTAS_CC=gcc
 # MCSTAS_CFLAGS=-O2
 
 if [ -z "$MCSTAS" ]
+then
 	echo Environment variable MCSTAS not defined. Edit $0 to set its value. 
 	exit 3
 fi
 
 if [ -z "$MCSTAS_CC" ]
+then
 	echo Environment variable MCSTAS_CC not defined. Edit %0 to set its value.  
 	exit 3
 fi
@@ -29,3 +31,4 @@ echo Compiling $INS
 mcstas -o $INS.c $INS.instr
 $MCSTAS_CC $MCSTAS_CFLAGS -o $INS.exe $INS.c -lm -I $MCSTAS/libs/mcpl $MCSTAS/libs/mcpl/libmcpl.a
 rm $INS.c
+

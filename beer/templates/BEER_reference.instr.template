@@ -438,8 +438,11 @@ long srccount;
  
 /* Add a component to count statistics */ 
 void addComponent(char *id, int idx) {
-	strcpy(stats[nComponents].id, id);
-    stats[nComponents].idx = idx;
+	int nc = sizeof(stats[nComponents].id);
+	memset(stats[nComponents].id, '\0', nc);
+	int mc = (nc<=sizeof(id)) ? nc : sizeof(id);
+	strncpy(stats[nComponents].id, id, mc);
+	stats[nComponents].idx = idx;
 	stats[nComponents].cnt = 0;
 	stats[nComponents].sum = 0.0;
 	nComponents ++;
