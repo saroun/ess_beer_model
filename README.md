@@ -27,7 +27,7 @@ Install:
 
     # from root package directory call
     pip install -e .
-    # check pip docs for other ways of installation packages
+    # check pip docs for other ways of installation
 
 Get beam axis, beam size and coordinate conversions:
 
@@ -57,7 +57,7 @@ Export configuration tables for BEER into given directory:
     import beer
     beer.reportTables(outdir='') # you can specify output directory
 
-Calculate and plot choper transmission functions for various operation modes:
+Calculate and plot chopper transmission functions for various operation modes:
 
     beer.reportChoppers(outdir='')
 
