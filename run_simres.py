@@ -38,8 +38,8 @@ This file is part of the package resources.
 #%% Import and define
 
 import sys
-import beer.run as exe
-import beer.modes as BMOD
+import beer.simres as simres
+import beer.modes as bmodes
 
 
 # set defoult counts:
@@ -64,19 +64,17 @@ if len(sys.argv)>1:
 #%% Set SIMRES configuration
 
 # leave workpath empty to use default: ~/beerpy/simres 
-exe.simresConfig(workpath='', java=JAVA)
+simres.configure(workpath='', java=JAVA)
 
-#%% Run SIMRES to update instrument file according to actual BEER geometry
+#%% Create BEER_setup.inp script for updating actual BEER configuration. 
+# Set scriptonly=False to also start SIMRES and run the script.
 
-"""
-import beer.simresexe as simexe
-simexe.runSetup(verify=False)
-"""
+simres.update(scriptonly=False)
 
 #%% Run a single simulation for given BEER mode
 
 """
-data = exe.simresRun(modes='PS2', n=counts, runsetup=False, plot=True)
+data = simres.execute(modes='PS2', n=counts, runsetup=False, plot=True)
 """
 
 #%% Run a sequence of simulations for multiple modes defined in beer.modes
@@ -84,13 +82,12 @@ data = exe.simresRun(modes='PS2', n=counts, runsetup=False, plot=True)
 # define modes to run
 
 # get all modes:
-modes = BMOD.getModeKeys() 
+modes = bmodes.getModeKeys() 
 
 # or define own list. Call BMOD.listModes() to get a list of defined modes:
 #modes = ['F0', 'PS2', 'M1']
  
 # execute simulation for these modes:
-data = exe.simresRun(modes=modes, n=counts, runsetup=False, plot=True)
-
+data = simres.execute(modes=modes, n=counts, runsetup=False, plot=True)
 
 

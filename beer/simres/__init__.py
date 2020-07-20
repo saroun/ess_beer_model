@@ -1,0 +1,195 @@
+# -*- coding: utf-8 -*-
+"""
+Encapsulates functions for running SIMRES simulations for 
+default BEER operation modes. 
+
+Usage:
+------
+
+    import beer.simres as simres
+    import beer.modes as bmodes
+
+    # Configure SIMRES workspace and Java path 
+    simres.configure(workpath='mypath', java='java')
+
+    # Run SIMRES to update instrument file according to actual BEER geometry
+    simres.runSetup()
+
+    # Run a single simulation for one mode
+    simres.execute(modes='PS2', n=10000, runsetup=False, plot=True)
+
+    # or run simulation for all modes 
+    result = simresRun(modes=bmodes.getModeKeys(), n=10000, runsetup=False, plot=True)
+
+    # to replot results:  
+    simres.plotResults(result, pdf='myresult')
+
+------------------------------------------------------
+Created on Mon Jul 20 16:58:52 2020
+@author: J. Saroun, saroun@ujf.cas.cz
+Copyright (c) 2020 Nuclear Physics Institute, CAS, Rez 
+"""
+
+import beer.simres.run as _exe
+
+_IS_SIMRES=None
+_IS_SIMRES_CONFIG=None
+
+
+def configure(workpath='', java='java', simresdir=''):
+    """
+    Set environment for SIMRES: workspace directory, java command and 
+    optionally SIMRES installation directory. 
+    
+    Must be executed before calling simresRun().
+    
+    Parameters:
+    -----------
+    workpath: str
+        Working directory. If empty, creates one in user's profile.
+    java: str
+        Command for calling Java (needed to launch simulation)
+    simresdir: str
+        Optional: provide path to SIMRES installation.
+        If not defined, uses default: `/opt/simres` on Linux and 
+        `%programfiles%\Restrax\Simres` on Windows.
+    """
+    import os
+    global _IS_SIMRES_CONFIG,_IS_SIMRES
+    
+    # Generate and save SIMRES project configuration
+    try:
+        _exe.setConfig(workpath=workpath, java=java)
+        _IS_SIMRES_CONFIG = True
+    except Exception as e:
+        _IS_SIMRES_CONFIG = False
+        print(e)
+    
+    # set path to SIMRES if requested
+    if simresdir:
+        path = os.path.normpath(simresdir)
+        if os.path.isdir(path):
+            _exe.setSimresPath(path)
+    # Verify SIMRES and workspace configuration            
+    _IS_SIMRES_CONFIG = _exe.verifyConfig(verbose=0)
+    _IS_SIMRES = _exe.verifySimres() and _exe.verifyJava()
+
+
+def update(scriptonly=False):
+    """
+    Create input script for setting up BEER instrument configuration 
+    according to actual beam geometry definition.
+    Optionally launches SIMRES to update the instrument file 
+    [BEER_reference.xml]. 
+    
+    Assumes that SIMRES configuration has already been defined (see
+    beer.simres.configure)
+    
+    Parameters:
+    -----------
+    scriptonly: boolean
+        if true, only create the SIMRES script BEER_setup.inp, do not execute it.
+
+    """
+    _exe.runSetup(verify = not scriptonly)
+    
+    
+def execute(modes=None, n=10000, plot=False, runsetup=False):
+    """
+    Run simulation using SIMRES for given BEER modes and number of neutrons.
+    simresConfig() must be executed before simresRun().
+    
+    Parameters:
+    ----------
+    modes: str or list
+        List of ID's (or a single ID) for BEER modes to be simulated. 
+        The modes are defined in beer.modes.
+        Use beer.modes.listModes() to print a list.
+        Use beer.modes.getModeKeys() to get a list of ID's.
+    n: int
+        Number of neutrons to run
+    plot: boolean
+        Plot results after simulation.
+    runsetup: boolean
+        Create and run input script for updating BEER instrument configuration
+        according to actual beam geometry definition.
+    
+    Returns:
+    -------
+    
+    List of beer.mcplot.Data1D objects with results.
+    """
+    import os
+    import beer.modes as bmodes
+    global _IS_SIMRES_CONFIG, _IS_SIMRES
+    fn = os.path.basename(__file__)
+    if (_IS_SIMRES_CONFIG is None) or (_IS_SIMRES is None):
+        msg = 'ERROR: workspace and/or SIMRES not configured.\n'
+        msg += 'Trying to use default settings.\n'
+        print(msg)
+        configure()
+    
+    if not _IS_SIMRES:
+        msg = 'SIMRES or Java not installed?\n'
+        msg += 'Use {}.simresConfig(simresdir=..., java=...) '.format(fn)
+        msg += 'to define path to SIMRES installation and java command.\n'
+        print(msg)
+        return
+    if not _IS_SIMRES_CONFIG:
+        msg = 'Workspace configuration failed? \n'
+        msg += 'Use {}.simresConfig(workpath=...) '.format(fn)
+        msg += 'to define valid path to your workspace directory.\n'
+        print(msg)
+        return
+        
+    # run setup script if requested
+    if runsetup:
+        out = _exe.runSetup(verify=False)
+        if not out:
+            raise Exception('Cannot run setup script.')
+    
+    datas = None
+    counts = max(500,n)
+    # derive timeout from counts
+    timeout = int(counts/10)+300
+    # define modes to run  
+    modeid = ''
+    if not modes:
+        modes = bmodes.getModeKeys()
+    elif isinstance(modes,str):
+        modeid = modes
+    elif len(modes)==1:
+        modeid = modes[0]
+
+    # execute simulation for a single mode:
+    if modeid:
+        print('\nStaring simulation for {}'.format(modeid))    
+        downmodes = ['F0', 'F1']
+        up = not (modeid in downmodes)
+        # execute simulation:
+        out = _exe.runSimulation(modeid, ncnt=counts, upstream=up, timeout=timeout)
+        if out:
+            # process output files and get a list of data objects
+            datas = _exe.processRun(modeid) 
+            # plot the retrieved data
+            if plot:
+                _exe.plotResults(datas, title='SIMRES '+modeid, pdf=modeid)
+        else:
+            print('Simulation not completed.')
+
+    # execute simulation for multiple modes:
+    else:
+        print('\nStaring simulation for {}'.format(','.join(modes)))
+        # execute simulation:
+        out = _exe.runModes(modes=modes, counts=counts, timeout=timeout, 
+                              verify=False)
+        if out:
+            # retrieve results:
+            datas = _exe.processResults(modes)
+            # plot the retrieved results:
+            if plot:
+                _exe.plotResults(datas, title='SIMRES', pdf='results')
+        else:
+            print('Simulation not completed.')
+    return datas
+

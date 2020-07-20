@@ -6,7 +6,7 @@ Usage:
 
 - ``getSimresPath`` to get default SIMRES installation path.
 - ``setSimresPath`` to change SIMRES installation path.
-- ``setSimresConfig`` to set SIMRES project paths.
+- ``setConfig`` to set SIMRES project paths.
 - ``runSimulation`` to run a SIMRES simulation for given BEER reference mode(s)
 - ``runModes`` to run a set of simulations for given BEER reference modes
 
@@ -17,7 +17,7 @@ Copyright (c) 2020 Nuclear Physics Institute, CAS, Rez
 import os, sys, subprocess
 from beer.utils import getTemplate, copyResources
 import beer.modes as BMOD
-import beer.simres as BSIM
+import beer.simres.conf as BSIM
 import beer.components as BC
 import beer.mcplot as mcplot
 import traceback
@@ -33,7 +33,7 @@ else:
     _SIMRES_PATH = os.path.join(os.environ['PROGRAMFILES'],'Restrax','Simres')
 
 # Keep SIMRES project data as global variables
-# Must be defined by user calling setSimresConfig() before running SIMRES
+# Must be defined by user calling setConfig() before running SIMRES
 _SIMRES_JAVA = 'java'
 _SIMRES_WORKPATH = ''
 _SIMRES_CFG_FILE = 'BEER_reference.xml'
@@ -101,18 +101,18 @@ def checkConfig(config=None):
     Parameters:
     ----------
     config: dict
-        configuration data in the format returned by getSimresConfig().
-        If None, calls getSimresConfig() to get actual values.
+        configuration data in the format returned by getConfig().
+        If None, calls getConfig() to get actual values.
 
     See also
     --------
-    getSimresConfig
+    getConfig
     """
     fn = os.path.basename(__file__)
     # check that all keys are present
     keys = ['WORKPATH','OUTPATH','CFGPATH','CFGFILE','JAVA','PRJFILE']
     if config is None:
-        config = getSimresConfig()
+        config = getConfig()
     for key in keys:
         missing = []
         if not key in config:
@@ -124,7 +124,7 @@ def checkConfig(config=None):
     dirs = [config['WORKPATH'], config['OUTPATH'], config['CFGPATH']]
     msgs = ''
     
-    sfx = 'Call {}.setSimresConfig() to define valid workspace.'.format(fn) 
+    sfx = 'Call {}.setConfig() to define valid workspace.'.format(fn) 
     for d in dirs:
         if not os.path.isdir(d):
             msgs += 'Directory {} does not exist.\n'.format(d)
@@ -342,11 +342,11 @@ def setSimresPath(path=''):
         _SIMRES_PATH = os.path.normpath(path)
 
 
-def getSimresConfig():
+def getConfig():
     """
     Get SIMRES project configuration as dict.
     
-    Change this setting by calling ``setSimresConfig``.
+    Change this setting by calling ``setConfig``.
     
     Returns:
     --------
@@ -384,7 +384,7 @@ def createWorkspace():
     """
     
     # create workspace directories
-    config = getSimresConfig()
+    config = getConfig()
     dirs = [config['CFGPATH'], config['OUTPATH'], config['WORKPATH']]
     for d in dirs:
         if not os.path.isdir(d):
@@ -417,7 +417,7 @@ def saveProjectInfo(fname='beer_simres.xml', verbose=True):
     
     """
     global _SIMRES_PRJ_FILE
-    config = getSimresConfig()
+    config = getConfig()
     if verbose:
         msg = 'Project setting:\n'
         fmt = '{}: {}\n'
@@ -457,7 +457,7 @@ def saveProjectInfo(fname='beer_simres.xml', verbose=True):
     _SIMRES_PRJ_FILE = fname
 
 
-def setSimresConfig(workpath='', instr='BEER_reference.xml', cfgpath='cfg', 
+def setConfig(workpath='', instr='BEER_reference.xml', cfgpath='cfg', 
                     outpath='out', java='java'):
     """
     Set SIMRES project configuration. Create workspace files and directories
@@ -519,7 +519,7 @@ def verifyConfig(verbose=1):
     """
     res = False
     try:
-        config = getSimresConfig()
+        config = getConfig()
         checkConfig(config)
         if verbose:
             print('\tConfiguration files are saved in: {}'.format(config['CFGPATH']))
@@ -551,7 +551,7 @@ def verifyJava(verbose=1):
     """
     Verify that java can be started.
     """
-    config = getSimresConfig()
+    config = getConfig()
     cmd = [config['JAVA'], '-version']
     out = None
     res = False
@@ -623,7 +623,7 @@ def runScript(config=None, script='BEER_setup.inp', log='',
     # verify project setting
     if not config:
         if not verifyConfig(): return
-        config = getSimresConfig()
+        config = getConfig()
     
     # check that the script exists
     scrfull = os.path.join(config['CFGPATH'],script)
@@ -712,7 +712,7 @@ def runSimulation(mode, config=None, ncnt=10000, upstream=True, verbose=1,
     # verify project setting
     if not config:
         if not verifyConfig(verbose=not quiet): return
-        config = getSimresConfig()
+        config = getConfig()
 
     # generate input script
     inp = saveScript(mode, ncnt=ncnt, outpath=config['CFGPATH'], file='')
@@ -744,13 +744,13 @@ def runSetup(verify=True):
     verify: boolean
         if true, verify SIMRES and Java
     
-    See setSimresConfig().
+    See setConfig().
     """
     # verify project setting
     if verify:
         if not (verifySimres() and verifyJava()): return
     if not verifyConfig(): return
-    config = getSimresConfig()
+    config = getConfig()
     # Save script for setting configuration according to the current beam geometry 
     # as defined in beer.geometry and beer.components
     BSIM.createScriptSetup(file = 'BEER_setup.inp', 
@@ -791,7 +791,7 @@ def runModes(modes=[], counts=1000, timeout=600, verify=True):
     if not verifyConfig(): return
     # modes to be simulated in down-stream direction
     downmodes = ['F0', 'F1']
-    config = getSimresConfig()
+    config = getConfig()
     res = (len(modes)>0)
     for m in modes:
         imode = BMOD.getModeIndex(m)
@@ -840,7 +840,7 @@ def processResults(results, dataname='_lam.dat', outfile='intensities.dat'):
     Retrieved results as Data1D objects.
         
     """
-    config = getSimresConfig()
+    config = getConfig()
      # add 2nd frame for DS1 mode to evaluation
     if ('DS1' in results) and (not 'DS1_2' in results):
         results.append('DS1_2')
@@ -877,7 +877,7 @@ def processRun(mode):
         
     """
     
-    config = getSimresConfig()
+    config = getConfig()
     datas = mcplot.processRun('', files=getOutputFiles(mode=mode), 
                               parentdir=config['OUTPATH'], 
                               dformat='simres')
@@ -900,7 +900,7 @@ def plotResults(datas, title='SIMRES', pdf=''):
         
     """
     if pdf:
-        config = getSimresConfig()
+        config = getConfig()
         out = os.path.join(config['OUTPATH'], pdf)
     else:
         out = ''

@@ -48,8 +48,8 @@ Copyright (c) 2020 Nuclear Physics Institute, CAS, Rez
 #%% Define functions
 
 import sys
-import beer.modes as BMOD
-import beer.run as exe
+import beer.modes as bmodes
+import beer.mcstas as mcstas
 
 # define number of trials (neutrons) to run:
 # can be passed by cmd argument: n=xxx
@@ -68,24 +68,22 @@ if len(sys.argv)>1:
  
 #%% Set McStas environment
 
-exe.mcstasConfig(workpath='', BINPATH=r'C:\mcstas-2.6\bin', MCSTAS=r'C:\mcstas-2.6\lib')
-
+mcstas.configure(workpath='', BINPATH=r'C:\mcstas-2.6\bin', MCSTAS=r'C:\mcstas-2.6\lib')
 
 #%% Create and compile default instrument 
 
-# To re-create instrument file (set also force=True to mcstasCompile):
+# To re-create instrument file (set also force=True to mcstasCompile):.
 """
-import beer.mcstasexe
-beer.mcstasexe.createInstrFile(statinfo=False, shielding=False)
+mcstas.createInstrument(statinfo=False, shielding=False)
 """
 
 # Compile:
-exe.mcstasCompile(force=False)
+mcstas.compileInstrument(force=False)
 
 #%% Run a single simulation for given BEER mode
 
 """
-data = exe.mcstasRun(modes='F0', n=counts, plot=True)
+data = mcstas.execute(modes='F0', n=counts, plot=True)
 """
 
 #%% Run a sequence of simulations for multiple modes defined in beer.modes
@@ -93,12 +91,11 @@ data = exe.mcstasRun(modes='F0', n=counts, plot=True)
 # define modes to run
 
 # get all modes:
-modes = BMOD.getModeKeys() 
+modes = bmodes.getModeKeys() 
 
 # or define own list. Call BMOD.listModes() to get a list of defined modes:
 #modes = ['F0', 'PS0', 'M1']
  
 # execute simulation for these modes:
-data = exe.mcstasRun(modes=modes, n=counts, plot=True)
-
+data = mcstas.execute(modes=modes, n=counts, plot=True)
 

@@ -4,8 +4,8 @@ Scripts for running simulations with McStas.
 
 Usage:
 
-- ``getMcStasConfig`` to get default project paths.
-- ``setMcStasConfig`` to change project paths.
+- ``getConfig`` to get default project paths.
+- ``setConfig`` to change project paths.
 - ``runSimulation`` to run McStas simulation for given BEER reference mode
 - ``runModes`` to run a set of simulations for given BEER reference modes
 
@@ -24,7 +24,7 @@ import sys
 import traceback
 from beer.utils import copyResources 
 import beer.modes as BMOD
-import beer.mcstas as BMC
+import beer.mcstas.conf as BMC
 import beer.mcplot as mcplot
 from subprocess import CalledProcessError, TimeoutExpired
 
@@ -144,20 +144,20 @@ def checkConfig(config=None):
     Parameters:
     -----------
     config: 
-        McStas project configuration in the format returned by getMcStasConfig()    
+        McStas project configuration in the format returned by getConfig()    
     
     See also:
     --------
     
-    `getMcStasConfig()` for getting information on currect configuration.
+    `getConfig()` for getting information on currect configuration.
     
-    `setMcStasConfig()` for setting the configuration.        
+    `setConfig()` for setting the configuration.        
         
     """
     # check that all keys are present
     keys = ['WORKPATH','OUTPATH','EXE','INSTR']
     if config is None:
-        config = getMcStasConfig()
+        config = getConfig()
     for key in keys:
         missing = []
         if not key in config:
@@ -166,7 +166,7 @@ def checkConfig(config=None):
             msg = 'Invalid config format. Missing keys {}'.format(','.join(missing))
             raise Exception('{}: '.format(__file__)+msg)
 
-    sfx = '\n Use setMcStasConfig() to define configuration.'
+    sfx = '\n Use setConfig() to define configuration.'
     fmt = '{} {} does not exist\n'
     opath = config['OUTPATH']
     wpath = config['WORKPATH']
@@ -228,11 +228,11 @@ def setOutputFiles(fset=None):
         _OUTFILES = fset
 
 
-def getMcStasConfig():
+def getConfig():
     """
     Returns configuration for executing McStas simulation as dict.
         
-    Use setMcStasConfig() for changing the configuration.
+    Use setConfig() for changing the configuration.
     
     Returns:
     ----------
@@ -268,7 +268,7 @@ def createWorkspace():
     """
     
     # create workspace directories
-    config = getMcStasConfig()
+    config = getConfig()
     dirs = [config['OUTPATH'], config['WORKPATH']]
     for d in dirs:
         if not os.path.isdir(d):
@@ -287,7 +287,7 @@ def createWorkspace():
     copyResources(config['WORKPATH'], files=files)
         
 
-def setMcStasConfig(workpath='', instname='BEER_reference', outpath='out'):
+def setConfig(workpath='', instname='BEER_reference', outpath='out'):
     """
     Set McStas project configuration. Create workspace files and directories
     if needed. 
@@ -328,10 +328,10 @@ def setMcStasConfig(workpath='', instname='BEER_reference', outpath='out'):
 
 #%% Create instrument file and compile it
 
-def createInstrFile(statinfo = False, shielding=False, inpath=None):
+def createInstrument(statinfo = False, shielding=False, inpath=None):
     """ Creates McStas instrument file from a template corresponding
     to the instrument name. Default is `BEER_reference`.
-    The created file is saved in the workspace as defined by setMcStasConfig(). 
+    The created file is saved in the workspace as defined by setConfig(). 
     
     The template file is searched for in the package resources, 
     unless `inpath` is defined.
@@ -346,7 +346,7 @@ def createInstrFile(statinfo = False, shielding=False, inpath=None):
         path where to search for instrument template. If not defined, use
         package resources.
     """
-    config = getMcStasConfig()
+    config = getConfig()
     checkConfig(config)
     BMC.parseTemplate(instrname = config['INSTR'], 
                   outpath=config['WORKPATH'], 
@@ -386,10 +386,10 @@ def compileInstrument(verify=True):
             env['MCSTAS_CFLAGS'] = mcstas['MCSTAS_CFLAGS'] 
     
     # check that there is instr file to compile
-    config = getMcStasConfig()
+    config = getConfig()
     instfile = os.path.join(config['WORKPATH'],config['INSTR']+'.instr')
     if not os.path.isfile(instfile):
-        createInstrFile(statinfo=False, shielding=False)
+        createInstrument(statinfo=False, shielding=False)
     if not os.path.isfile(instfile):
         print('ERROR: Instrument file is missing: {}'.format(instfile))
         return
@@ -451,7 +451,7 @@ def verifyConfig(verbose=1):
     """
     res = False
     try:
-        config = getMcStasConfig()
+        config = getConfig()
         checkConfig(config)
         if verbose:
             print('Workspace directory: "{}"'.format(config['WORKPATH']))
@@ -471,7 +471,7 @@ def verifyInstrument(verbose=1):
     """
     # check that the executable exists   
     res = ''
-    config = getMcStasConfig()
+    config = getConfig()
     exename = os.path.join(config['WORKPATH'],config['EXE'])
     if not os.path.isfile(exename):
         if verbose:
@@ -528,7 +528,7 @@ def verifyMcStas(verbose=1):
         return q
     
     mcstas = getMcStas()
-    config = getMcStasConfig()
+    config = getConfig()
     
     # Set and check environment
     env = os.environ
@@ -594,7 +594,7 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
         return
 
     # get configuration
-    config = getMcStasConfig()
+    config = getConfig()
     outpath = os.path.normpath(config['OUTPATH'])
 
     # get mode info
@@ -756,7 +756,7 @@ def processResults(results, dataname='Lmon.dat', outfile='intensities.dat'):
         output file name
         
     """
-    config = getMcStasConfig()
+    config = getConfig()
     if 'DS1' in results:
         results.remove('DS1')
         if not 'DS1_0' in results:
@@ -798,7 +798,7 @@ def processRun(mode):
         
     """
     
-    config = getMcStasConfig()
+    config = getConfig()
     datas = mcplot.processRun(mode, 
                           files=getOutputFiles(), 
                           parentdir=config['OUTPATH'], 
@@ -822,7 +822,7 @@ def plotResults(datas, title='McStas', pdf=''):
         
     """
     if pdf:
-        config = getMcStasConfig()
+        config = getConfig()
         out = os.path.join(config['OUTPATH'],pdf)
     else:
         out = ''

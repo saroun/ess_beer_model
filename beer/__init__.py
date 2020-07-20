@@ -4,7 +4,7 @@ def reportTables(outdir=''):
     Exports three tables in text format which describe BEER optics geometry:
         
     1. **Table of components** - the content of the document ESS-0478295 
-    `BEER optics specifications table`, in file `components_list.txt`.
+    `BEER optics specifications table`, in file `BEER_components.txt`.
     
     2. **Beam axis table**, a detailed table of BEER beam axis coordinates in 
     three reference frame (TCS, FP and ISCS), in file `BEER_beam.txt`.
