@@ -8,12 +8,12 @@ Repository: https://bitbucket.org/saroun/beer_optics
 
 ## Summary
 This Python package provides the definition of neutron optics geometry for the diffractometer BEER@ESS and associated tools:  
-- Export of neutron beam axis coordinates and various functions for coordinate transformations between target, beamport and instrument reference frames. 
-- Export of the table of neutron optics components (a text version of the document `ESS-0478295 - BEER Optics Specifications`)
-- Definition of components settings for reference operation modes of BEER (see `ESS-0238217 - Optics Report for the BEER Instrument`)
-- Calculation of chopper transmission functions for these reference modes
-- Binding to the simulation program `McStas`: export of instrument configuration files, functions for running simulations and plotting results. 
-- Binding to the simulation program `SIMRES`: export of input scripts, functions for running simulations and plotting results.
+- Export of neutron beam axis coordinates and various functions for coordinate transformations between target, beamport and instrument reference frames.  
+- Export of the table of neutron optics components (a text version of the document `ESS-0478295 - BEER Optics Specifications`)  
+- Definition of components settings for reference operation modes of BEER (see `ESS-0238217 - Optics Report for the BEER Instrument`)  
+- Calculation of chopper transmission functions for these reference modes  
+- Binding to the simulation program `McStas`: export of instrument configuration files, functions for running simulations and plotting results.   
+- Binding to the simulation program `SIMRES`: export of input scripts, functions for running simulations and plotting results.  
 
 ### See also:
 
@@ -21,8 +21,13 @@ Diffractometer BEER: https://europeanspallationsource.se/instruments/beer
 McStas: http://www.mcstas.org  
 SIMRES: https://github.com/saroun/simres  
 
-
 ## Quick guide
+
+Install:
+
+    # from root package directory call
+    pip install -e .
+    # check pip docs for other ways of installation packages
 
 Get beam axis, beam size and coordinate conversions:
 
