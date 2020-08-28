@@ -9,7 +9,9 @@ from setuptools import setup
 
 beer_data = ['templates/*.template', 
              'resources/*', 
-             'resources/tables/*']
+             'resources/tables/*',
+			 'simres/*',
+			 'mcstas/*']
 
 
 with open("README.md", "r") as fh:
