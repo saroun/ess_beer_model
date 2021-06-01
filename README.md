@@ -7,6 +7,7 @@ Copyright (c) 2020 Nuclear Physics Institute, CAS, Rez, http://www.ujf.cas.cz
 Repository: https://bitbucket.org/saroun/beer_optics 
 
 ## Summary
+
 This Python package provides the definition of neutron optics geometry for the diffractometer BEER@ESS and associated tools:  
 - Export of neutron beam axis coordinates and various functions for coordinate transformations between target, beamport and instrument reference frames.  
 - Export of the table of neutron optics components (a text version of the document `ESS-0478295 - BEER Optics Specifications`)  

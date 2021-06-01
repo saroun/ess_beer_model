@@ -67,7 +67,7 @@ if len(sys.argv)>1:
             counts = int(float(pv))
  
 #%% Set McStas environment
-
+# leave workpath empty to use default: ~/beer_optics/mcstas 
 mcstas.configure(workpath='', BINPATH=r'C:\mcstas-2.6\bin', MCSTAS=r'C:\mcstas-2.6\lib')
 
 #%% Create and compile default instrument 

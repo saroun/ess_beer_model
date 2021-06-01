@@ -3,6 +3,7 @@ data
 work
 dist
 build
+tests
 *.egg*
 tmp*
 __pycache__

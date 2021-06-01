@@ -12,28 +12,203 @@ import numpy as np
 from matplotlib import pyplot as plt
 import os
 import re
+import shlex
 
 #%% Basic data structures
 
-pnames = ['values', 'xlabel', 'ylabel', 'xlimits', 'title']
+#pnames = ['values', 'xlabel', 'ylabel', 'xlimits', 'title']
 
+
+
+class Data2D:
+    """Data structure for 2D plot.
+    
+    Parameters
+    ----------
+    params: dict
+        parameters for plotting
+    dformat: str
+        'mcstas' or 'simres', defines data format
+    data: array-like
+        2D pixel matrix
+    scale: list
+        matrix range as [[xmin, xmax],[ymin,ymax]]
+    
+    
+    The recognized plot parameters are stored as:
+    
+    Attributes
+    ----------
+    xlabel: str
+        X-axis label.
+    ylabel: str
+        Y-axis label.
+    zlabel: str
+        Value label.
+    title:str
+        Plot title, placed above the plot cell.
+    comment: str
+        Plot comment, not shown in the plot.
+    vals: dict
+        Sumary values retrieved from data, `sum` is used to show integral intensity. 
+    
+    """
+    
+    def __init__(self, params, dformat, data=None):
+        if not (dformat=='simres'):
+            msg = 'Only `simres` format is implemented for Data2D.\n'
+            msg += 'McStas format will be added in next versions.'
+            raise Exception(msg)
+        self.title=''
+        self.xlabel=''
+        self.ylabel=''
+        self.zlabel=''
+        self.data=None
+        self.scale=None
+        self.fname=''
+        self.comment=''
+        self.dformat=dformat
+        self.vals=None
+        for key in params.keys():
+            if (key=='xlabel'):
+                self.xlabel=params['xlabel']
+            elif (key=='ylabel'):
+                self.ylabel=params['ylabel']
+            elif (key=='zlabel'):
+                self.zlabel=params['zlabel']
+            elif (key=='title'):
+                self.title=params['title']
+            elif (key=='comment'):
+                self.comment=params['comment']
+            elif (key=='values'):
+                self.vals = params['values'],
+            elif (key=='scale'):
+                self.scale = params['scale'] 
+        if (data is not None):
+            self.data=data
+    
+    def summary(self):
+        """Return text sumarizing data properties."""
+        out = 'Data file:\t{}\n'.format(self.fname)
+        out += 'Title:\t{}\n'.format(self.title)
+        if not self.data is None:
+            out += 'Rows:\t{:d}\n'.format(self.data.shape[0])
+            out += 'Columns:\t{:d}\n'.format(self.data.shape[1])
+            out += 'Value range:\t{:g}, {:g}\n'.format(self.vals['zmin'], 
+                                                     self.vals['zmax'])
+            out += 'Centre:\t{:g}, {:g}\n'.format(self.vals['xmean'], 
+                                                     self.vals['ymean'])
+            out += 'FWHM:\t{:g}, {:g}\n'.format(self.vals['xwidth'], 
+                                                     self.vals['ywidth'])
+            
+        if not self.scale is None:
+            fmt = 'Scale:\tcols=({:g}, {:g}), rows=({:g}, {:g})\n'
+            out += fmt.format(*self.scale[0], *self.scale[1])
+        out += 'Intensity:\t{:g}\n'.format(self.vals['sum'])
+        return out
+    
+    def calValues(self):
+        """Calculate integral parameters: sum, centre, widths, zmin, zmax.
+        
+        Return as dict.
+        """
+        r8ln2 = np.sqrt(8*np.log(2))
+        if self.data is None:
+            return None
+        nx = self.data.shape[0]
+        ny = self.data.shape[1]       
+        dx = (self.scale[0][1] - self.scale[0][0])/nx
+        dy = (self.scale[1][1] - self.scale[1][0])/ny
+        x = np.linspace(self.scale[0][0]+0.5*dx, self.scale[0][1]-0.5*dx, 
+                        num=nx)
+        y = np.linspace(self.scale[1][0]+0.5*dy, self.scale[1][1]-0.5*dy,
+                        num=ny)      
+        valx = np.sum(self.data, axis=0)
+        valy = np.sum(self.data, axis=1)
+        integ = np.sum(valx)
+        
+        
+        sum0 = np.sum(valx)
+        sum1 = valx.dot(x)
+        sum2 = valx.dot(x**2)
+        integ = sum0
+        if sum0>0:
+            meanx = sum1/sum0
+            stdevx = np.sqrt(sum2/sum0 - meanx**2)
+        else:
+            meanx = 0.0
+            stdevx = 0.0
+        fwhmx = r8ln2*stdevx
+        
+        sum0 = np.sum(valy)
+        sum1 = valy.dot(y)
+        sum2 = valy.dot(y**2)
+        if sum0>0:
+            meany = sum1/sum0
+            stdevy = np.sqrt(sum2/sum0 - meany**2)
+        else:
+            meany = 0.0
+            stdevy = 0.0
+        fwhmy = r8ln2*stdevy
+        
+        res = {'sum': integ,
+               'xwidth': fwhmx,
+               'ywidth': fwhmy,
+               'xmean': meanx,
+               'ymean': meany,
+               'zmin' : np.min(self.data),
+               'zmax' : np.max(self.data)
+               }
+
+        return res
 
 
 class Data1D:
+    """Data structure for 1D plot.
+    
+    Parameters
+    ----------
+    params: dict
+        parameters for plotting
+    dformat: str
+        'mcstas' or 'simres', defines data format
+    data: array-like
+        data columns x, y, err (optional)
+    
+    
+    The recognized plot parameters are stored as:
+    
+    Attributes
+    ----------
+    xlabel: str
+        X-axis label.
+    ylabel: str
+        Y-axis label.
+    title:str
+        Plot title, placed above the plot cell.
+    comment: str
+        Plot comment, not shown in the plot.
+    xlimits: list(2)
+        X-axis limits. Actually not used, scale is automatic.
+    vals: dict
+        Data from the "Values" header, `sum` is used to show integral intensity. 
+    legend: list of str
+        Labels for individual data sets. If defined, they are used as the 
+        value of the argument `legend` passed to :func:`errorbar`.
+    
     """
-    Data structure for 1D plot
-    """
+    
     def __init__(self, params, dformat, data=None):
         self.title=''
         self.xlabel=''
         self.ylabel=''
-        self.xlimits=[0,1]
+        self.xlimits=None
         self.data=None
         self.legend=''
         self.fname=''
         self.comment=''
         self.dformat=dformat
-        self.vals=[0, 0, 0]
+        self.vals=None
         for key in params.keys():
             if (key=='xlabel'):
                 self.xlabel=params['xlabel']
@@ -47,25 +222,29 @@ class Data1D:
                 self.xlimits=params['xlimits']
             elif (key=='values'):
                 self.vals = params['values'] 
+            elif (key=='legend'):
+                self.legend = params['legend'] 
         if (data is not None):
             self.data=data
     
     def summary(self):
+        """Return text sumarizing data properties."""
         out = 'Data file:\t{}\n'.format(self.fname)
         out += 'Title:\t{}\n'.format(self.title)
-        if self.data[0]:
+        if self.data:
             out += 'Rows:\t{:d}\n'.format(len(self.data[0]))
-        out += 'Intensity:\t{:g} +- {:g}\n'.format(self.vals['sum'], self.vals['e_sum'])
+        out += 'Intensity:\t{:g} +- {:g}\n'.format(self.vals['sum'], 
+                                                   self.vals['e_sum'])
         return out
     
     def calValues(self):
-        """
-        Calculate integral parameters: intensity, spread, mean.
+        """Calculate integral parameters: intensity, spread, mean.
+        
         Return as dict.
         """
         r8ln2 = np.sqrt(8*np.log(2))
         if not self.data:
-            return
+            return None
         nc = len(self.data)
         x = np.array(self.data[0])
         y = np.array(self.data[1])
@@ -100,8 +279,9 @@ class Data1D:
 #%% Parsers of simulation results
 
 """
- Define a key for each item from pnames. The key is used to search for 
-given parameter in file headers. 
+Define a key-valye pair for each item from headers. 
+The key is used to search for given parameter in file headers. 
+The values are used as keys in the resulting dict structure.
 """
 # For McSTas
 keysmc = {'values':'values',
@@ -114,20 +294,22 @@ keysmc = {'values':'values',
 # NOTE: intensity is calculated from the data, hence values=None.
 keyssim = {'X-TITLE':'xlabel',
            'Y-TITLE':'ylabel',
+           'LABEL(1)':'zlabel',
            'X-RANGE':'xlimits',
+           'Y-RANGE':'ylimits',
+           'scale (col,row)':'scale',
            'TITLE':'title',
            'COMMENT':'comment'
           }
 
        
 def parseHdrMcStas(line):
-    """
-    Extracts parameters from a single text line of a McStas format header. 
+    """Extract parameters from a single text line of a McStas format header.
     
     Parameter keys are defined as a list `keysmc`.
     
-    Returns:
-    --------
+    Returns
+    -------
     Hash map with found parameter keys and values.
     """
     res = {}
@@ -162,7 +344,7 @@ def parseHdrMcStas(line):
         if len(s)>1:
             res[key] = [float(s[0]),float(s[1])]
     # expect 3 floats
-    if name=='values':
+    elif name=='values':
         s = vals[0].split()
         if len(s)>1:
             v = {}
@@ -176,13 +358,12 @@ def parseHdrMcStas(line):
 
            
 def parseHdrSIMRES(ln):
-    """
-    Extracts parameters from a single text line of a SIMRES format header.
+    """Extract parameters from a single text line of a SIMRES format header.
     
     Parameter keys are defined as a list `keyssim`.
     
-    Returns:
-    --------
+    Returns
+    -------
     Hash map with found parameter keys and values.
     """
     res = {}
@@ -209,10 +390,16 @@ def parseHdrSIMRES(ln):
         vals = [val.strip()]
     # now we need to to convert specific variables into valid data:
     # expect a pair of floats
-    if name=='X-RANGE':
+    if key=='xlimits' or key=='ylimits':
         s = vals[0].split()
         if len(s)>1:
             res[key] = [float(s[0]),float(s[1])]
+    elif key=='scale':
+        s = vals[0].replace('(','').replace(')','').split(',')
+        if len(s)==4:
+            res[key] = [[float(s[0]),float(s[1])],[float(s[2]),float(s[3])]] 
+        else:
+            raise Exception('Wrong Data2D scale parameter format: '+vals[0])
     # expect a single string
     else:
         res[key] = ''.join(vals)
@@ -220,9 +407,8 @@ def parseHdrSIMRES(ln):
     
 
 def parseFileMcStas(fname, yscale=1):
-    """
-    Loads a data file and converts its content to a Data1D object. 
-    
+    """Load a data file and converts its content to a Data1D object.
+     
     The input file must be a McStas 1-dim monitor output file.
     """
     params = {}
@@ -250,10 +436,9 @@ def parseFileMcStas(fname, yscale=1):
     return out
 
 
-def parseFileSIMRES(fname, yscale=1):
-    """
-    Loads a data file and converts its content to a Data1D object. 
-    
+def parseFileSIMRES(fname, yscale=1, xcol=0, ycol=1, errcol=2):
+    """Load a data file and converts its content to a Data1D object.
+     
     The input file must be a SIMRES BEAM1D graph data file.
     """
     params = {}
@@ -262,12 +447,13 @@ def parseFileSIMRES(fname, yscale=1):
     err = []
     sect = 0
     # assume 2 columns by default
-    nc = 2
+    nc = -1
+    ncmax = max(xcol, ycol)
     with open(fname, 'r') as f:
         lines = f.readlines()
         for L in lines:
             # start of the data section
-            if L.strip().startswith('DATA_1D'):
+            if L.strip().startswith('DATA_1D') or L.strip().startswith('SCAN_1D'):
                 sect = 1
             # read header
             elif sect==0:
@@ -277,24 +463,26 @@ def parseFileSIMRES(fname, yscale=1):
             # data section has 1 header line. 
             # get number of columns from here
             elif sect==1:
-                s = L.strip().split()
+                s = shlex.split(L.strip())
+                # s = L.strip().split()
                 nc = len(s)
                 sect = 2
             elif sect==2:
                 s = L.split()
+                if nc<0:
+                    nc = len(s)
                 if not len(s)==nc:
                     msg = 'Invalid data format, number of columns does not match header.'
                     raise Exception(msg)
-                if nc<2:
-                    msg = 'Invalid data format, number of columns < 2'
+                if nc < ncmax+1:
+                    msg = 'Invalid data format, number of columns < {:d}'.format(ncmax)
                     raise Exception(msg)
-                if nc>=2:
-                    x += [float(s[0])]
-                    y += [float(s[1])*yscale]
-                if nc>=3:
-                    err += [float(s[2])*yscale]
+                x += [float(s[xcol])]
+                y += [float(s[ycol])*yscale]
+                if nc >= errcol+1:
+                    err += [float(s[errcol])*yscale]
         f.close()
-    if nc==3:
+    if nc >= errcol+1:
         data = [x, y, err]
     else:
         data = [x, y]
@@ -303,23 +491,81 @@ def parseFileSIMRES(fname, yscale=1):
     out.fname = fname
     return out
 
+
+
+def parseFileSIMRES2D(fname, zscale=1):
+    """Load a data file and converts its content to a Data2D object.
+     
+    The input file must be a SIMRES BEAM2D graph data file.
+    """
+    params = {}
+    sect = 0
+    # assume 2 columns by default
+    nc = -1
+    nr = -1
+    rows = []
+    with open(fname, 'r') as f:
+        lines = f.readlines()
+        for L in lines:
+            # ignore empty lines and comments
+            if len(L.strip())==0 or L.startswith('#'):
+                pass
+            else:
+                # start of the data section
+                if L.strip().startswith('DATA_2D') or L.strip().startswith('SCAN_2D'):
+                    sect = 1
+                # read header
+                elif sect==0:
+                    p = parseHdrSIMRES(L)
+                    if (len(p)>0):
+                        params = {**params, **p}
+                # data section has no header line. 
+                
+                elif sect==1:
+                    # 1st data row: get number of columns from here
+                    if nr<0:
+                        s = shlex.split(L.strip())
+                        nc = len(s)
+                    nr += 1
+                    s = L.split()
+                    if nc<0:
+                        nc = len(s)
+                    if not len(s)==nc:
+                        msg = 'Invalid data format, variable number of columns.'
+                        raise Exception(msg)
+                    sa = np.array(s)
+                    row = sa.astype(np.float)
+                    rows.append(row)
+        f.close()
+    data = np.array(rows)
+    out = Data2D(params, 'simres', data=data)
+    out.vals = out.calValues()
+    out.fname = fname
+    return out
+
 #%% Functions operating on Data1D objects
 
-def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True):
-    """
-    Plot given data (class Data1D) on provided axis. 
+def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True, grid=None):
+    """Plot given data (class Data1D) on provided axis.
+     
     Optionally, scale the x,y axes by provided factors (xscale, yscale).
     
-    Arguments:
-    ---------
-    ax: matplotlib.pyplot.Axes
-        axis object to plot on
-    dset: beer.mcplot.Data1D
-        data set to be plotted
+    Parameters
+    ----------
+    ax: :class:`matplotlib.pyplot.Axes`
+        Axis object to plot on.
+    dset: list of :class:`~.Data1D`
+        Data set to be plotted.
     xscale: float
         x-axis scaling
     yscale: float
         y-axis scaling
+    showvalue: boolean
+        Add intensity to the plot title (if dset has only one curve to plot).
+    grid: dict
+        If defined, contains arguments to be passed to the 
+        :meth:`~matplotlib.pyplot.Axes.grid` method.
+        
     """
     MEDIUM_SIZE = 10
     BIGGER_SIZE = 12 
@@ -334,7 +580,7 @@ def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True):
                 }
                 
     def replChar(s):
-        """ Convert special characters from PGPLOT to LaTeX math format """
+        """Convert special characters from PGPLOT to LaTeX math format."""
         if s.find('\\')>=0:
             # avoid problems with escape ...
             ss = re.sub(r'\\','@@',s)
@@ -349,9 +595,7 @@ def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True):
         return out
     
     def getx(d):
-        """ 
-        Consolidate x-label text
-        """
+        """Consolidate x-label text."""
         xsc = xscale
         xlbl = d.xlabel
         q = xlbl.find('[\gms]')
@@ -375,16 +619,21 @@ def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True):
     if len(dset)<=0:
         return
     [xlbl, xsc] = getx(dset[0])
+    # get y-limits
     ymax = 0
     for dd in dset:
         ymax =  max(ymax,np.max(dd.data[1])*yscale)
     ax.set_ylim(0, ymax*1.05) 
+    if dset[0].xlimits is not None:
+        ax.set_xlim(dset[0].xlimits[0]*xsc, dset[0].xlimits[1]*xsc)
     ax.set_xlabel(xlbl, fontsize=MEDIUM_SIZE)
     ax.set_ylabel(dset[0].ylabel, fontsize=MEDIUM_SIZE)
     ax.minorticks_on()
     ax.tick_params(axis='both', labelsize=MEDIUM_SIZE)
+    if grid:
+        ax.grid(**grid)
     title = dset[0].title
-    # add intensity info if required 
+    # add intensity info if required and possible 
     if showvalue and (len(dset)==1) and dset[0].vals:
         sval = 'I = {:.3g}'.format(dset[0].vals['sum'])
         title += ' ; '+sval
@@ -392,7 +641,14 @@ def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True):
         #        verticalalignment='top', transform=ax.transAxes)
     ax.set_title(title, fontsize=BIGGER_SIZE)
     for dd in dset:
-        ax.errorbar(np.multiply(dd.data[0],xsc), np.multiply(dd.data[1],yscale), label=dd.legend)
+        if len(dd.data)>2:
+            ebar = np.multiply(dd.data[2],yscale)
+        else:
+            ebar=None
+        ax.errorbar(np.multiply(dd.data[0],xsc), 
+                    np.multiply(dd.data[1],yscale), 
+                    yerr=ebar,
+                    label=dd.legend)
     if dd.legend:
         ax.legend()
 
@@ -400,8 +656,8 @@ def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True):
 
 def processResults(results, dataname='Lmon.dat', parentdir='./', outfile='', 
                 dformat='mcstas', yscale=1):
-    """
-    Process a set of simulation results from McStas or SIMRES. 
+    """Process a set of simulation results from McStas or SIMRES.
+     
     For each result, find given data file (dataname) and convert it 
     to the Data1D object. Print and (optionally) save the integral intensities 
     for all results as a table.    
@@ -429,8 +685,8 @@ def processResults(results, dataname='Lmon.dat', parentdir='./', outfile='',
     would process files ``A_xmon.dat``, ``B_xmon.dat`` and ``C_xmon.dat`` from the 
     directory ``parentdir``.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     results: list of str
         list of directories (McStas) or file name bases (SIMRES) to search for
     dataname: str
@@ -443,8 +699,7 @@ def processResults(results, dataname='Lmon.dat', parentdir='./', outfile='',
         'mcstas' or 'simres', defines data format
     yscale: float
         scale factor to apply for y-values 
-    """
-    
+    """   
     out = "# ID\tintensity\terr\n"
     fmt = "{}\t{:.3f}\t{:.3f}\n"
     datas = []
@@ -479,13 +734,13 @@ def processResults(results, dataname='Lmon.dat', parentdir='./', outfile='',
 
 def processRun(dirname, files=['Lmon.dat', 'TofMon.dat'], parentdir='./', 
                dformat='mcstas', yscale=1):
-    """
-    Process a single simulation result from McStas or SIMRES. 
+    """Process a single simulation result from McStas or SIMRES.
+     
     Find all specified files in given directory and convert them 
     to the `Data1D` objects. Return these objects as a list.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     dirname: str
         directory to search for files in (relative to parentdir)
     files: list of str
@@ -515,21 +770,24 @@ def processRun(dirname, files=['Lmon.dat', 'TofMon.dat'], parentdir='./',
     return datas
 
 
-def plotDataSet(datas, yscale=1, title='', pdf=''):
-    """
-    Plot a set of data given as a list of Data1D objects
+def plotDataSet(datas, title='', pdf='',  **kwargs):
+    """Plot a set of data given as a list of Data1D objects.
     
-    Arguments:
-    ---------
-    datas: list of Data1D
-        list of data objects for 1-dim monitors
-    yscale: float
-        scale plot y-axis by given factor
+    Parameters
+    ----------
+    datas: list
+        list of data objects for 1-dim monitors.
+        If the list items are Data1D objects, then each bo contains just one 
+        curve.
+        If the list items are lists of Data1D, then each box
+        will plot all curves defined by these Data1D items.
     title: str
         a common title for the plot
     pdf: str
         filename for output figure in PDF format 
         (leave empty to suppress this feature)
+    kwargs: dict
+        Other arguments passed to :func:`~.plot1D`
     
     """
     if len(datas)<=0:
@@ -550,10 +808,20 @@ def plotDataSet(datas, yscale=1, title='', pdf=''):
     for i in range(nax):
         if (i<nf):
             d = datas[i]
-            fn = os.path.basename(d.fname)
-            dn = os.path.basename(os.path.dirname(d.fname))
-            d.title = 'file = ' + os.path.normpath(os.path.join(dn,fn))
-            plot1D(axx[i], [d])
+            if isinstance(d,list):
+                dd = d
+            else:
+                dd = [d]
+            if dd[0].fname:
+                fn = os.path.basename(dd[0].fname)
+                dn = os.path.basename(os.path.dirname(dd[0].fname))
+                tit = 'file = ' + os.path.normpath(os.path.join(dn,fn))
+            elif dd[0].title:
+                tit = dd[0].title
+            else:
+                tit = ''
+            dd[0].title = tit
+            plot1D(axx[i], dd, **kwargs)
         else:
             axx[i].axis('off')
     if title:

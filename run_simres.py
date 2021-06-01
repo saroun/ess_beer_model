@@ -63,7 +63,7 @@ if len(sys.argv)>1:
 
 #%% Set SIMRES configuration
 
-# leave workpath empty to use default: ~/beerpy/simres 
+# leave workpath empty to use default: ~/beer_optics/simres 
 simres.configure(workpath='', java=JAVA)
 
 #%% Create BEER_setup.inp script for updating actual BEER configuration. 
