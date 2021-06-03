@@ -227,6 +227,17 @@ class Data1D:
         if (data is not None):
             self.data=data
     
+    def getParams(self):
+        """Return parameters as dict."""
+        params = {'xlabel':self.xlabel,
+                  'ylabel':self.ylabel,
+                  'title':self.title,
+                  'comment':self.comment,
+                  'xlimits':self.xlimits,
+                  'values':self.vals,
+                  'legend':self.legend}
+        return params
+    
     def summary(self):
         """Return text sumarizing data properties."""
         out = 'Data file:\t{}\n'.format(self.fname)
