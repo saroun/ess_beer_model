@@ -1,5 +1,4 @@
 .spy*
-data
 work
 dist
 build
@@ -7,5 +6,8 @@ tests
 *.egg*
 tmp*
 __pycache__
+*.xlsx
+*.zip
+
 
 

@@ -53,7 +53,8 @@ Get beam axis, beam size and coordinate conversions:
 Export configuration tables for BEER into given directory:  
 `BEER_components.txt`, the contents of the components table, ESS-0478295.  
 `BEER_beam.txt`, a table with beam axis coordinates in three reference frames (TCS, W2, ISCS).  
-`BEER_modes.txt`, reference operation modes with corresponding components settings.
+`BEER_modes.txt`, reference operation modes with corresponding components settings.  
+The latest versions of these tables are stored in the repository (see ./data/*)
 
     import beer
     beer.reportTables(outdir='') # you can specify output directory
