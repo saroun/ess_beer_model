@@ -801,10 +801,10 @@ def getSlice(dist, coord='ISCS'):
     # get profile in ISCS
     d = dist
     size = beamSize(d, coord = _COORD)
-    TL = np.array([dist, size[:,0], size[:,2]]).T
-    TR = np.array([dist, size[:,1], size[:,2]]).T
-    BL = np.array([dist, size[:,0], size[:,3]]).T
-    BR = np.array([dist, size[:,1], size[:,3]]).T
+    TL = np.array([dist, size[0,0], size[0,2]]).T
+    TR = np.array([dist, size[0,1], size[0,2]]).T
+    BL = np.array([dist, size[0,0], size[0,3]]).T
+    BR = np.array([dist, size[0,1], size[0,3]]).T
     CTR = 0.25*(TL+TR+BL+BR)
     if (coord != _COORD):
         TL = convertTo(coord, TL)
