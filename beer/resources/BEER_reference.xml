@@ -1131,7 +1131,7 @@
 				<WAV name="waviness" units="mrad">0.2</WAV>
 				<MISALIGN name="misalignment" units="mm">2.0E-2 2.0E-2</MISALIGN>
 				<ACTIVE name="active">1 1 1 1</ACTIVE>
-				<SMOOTH name="smooth">1 1 0 0</SMOOTH>
+				<SMOOTH name="smooth">0 0 0 0</SMOOTH>
 				<MONITOR name="monitor">0 0 0 0</MONITOR>
 				<REF0 name="r_0" units=" ">0.0</REF0>
 				<REFM name="r_m" units=" ">0.0</REFM>
@@ -1232,7 +1232,7 @@
 				<WAV name="waviness" units="mrad">0.2</WAV>
 				<MISALIGN name="misalignment" units="mm">2.0E-2 2.0E-2</MISALIGN>
 				<ACTIVE name="active">1 1 1 1</ACTIVE>
-				<SMOOTH name="smooth">1 1 0 0</SMOOTH>
+				<SMOOTH name="smooth">0 0 0 0</SMOOTH>
 				<MONITOR name="monitor">0 0 0 0</MONITOR>
 				<REF0 name="r_0" units=" ">0.0</REF0>
 				<REFM name="r_m" units=" ">0.0</REFM>
