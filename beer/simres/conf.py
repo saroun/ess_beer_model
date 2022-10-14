@@ -68,8 +68,7 @@ def getPreviousDistance(key0):
     return L0
 
 def getRelDistance(key0, key1):
-    """
-    calculate SIMRES distance bewteen components. 
+    """Calculate SIMRES distance bewteen components.
     
     In the `beer.components` module, the componet distances are measured along x_ISCS axis. 
     In SIMRES, the distance is take along actual incident axis direction. hence 
@@ -254,9 +253,9 @@ def cfgDist(key, key0=None):
 
 
 def cfgChopperTiming(key, phase=0):
-    """
-    Generate chopper timing string in the format 
-    ``ctr1:win1:ctr2:win2:...``
+    """Generate chopper timing string.
+    
+    The format is ``ctr1:win1:ctr2:win2:...``
     
     ctr = window center
     
@@ -264,7 +263,7 @@ def cfgChopperTiming(key, phase=0):
     
     as a fraction of period.
     
-    Parameters:
+    Parameters
     ----------
     key: str
         chopper ID
@@ -320,10 +319,8 @@ def cfgChopperSection():
     out += cfgGUIDE('GCA1', key0='GSW')
     out += cfgChopper('PSC1', key0='GCA1' )
     out += cfgGUIDE('GCA2', key0='PSC1' )
-    out += cfgGUIDE('GCA3', key0='GCA2' )
-    out += cfgChopper('PSC2', key0='GCA3' )
-    out += cfgGUIDE('GCA4', key0='PSC2' )
-    out += cfgGUIDE('GCB', key0='GCA4' )
+    out += cfgChopper('PSC2', key0='GCA2' )
+    out += cfgGUIDE('GCB', key0='PSC2' )
     out += cfgChopper('PSC3', key0='GCB' )
     out += cfgGUIDE('GCC', key0='PSC3' )
     out += cfgChopper('FC1A', key0='GCC' )
@@ -376,14 +373,13 @@ def cfgFocusingSection():
 
 
 def createScriptSetup(file = 'BEER_setup.inp', outpath='', save=''):
-    """ Creates input script for SIMRES.
+    """Create input script for SIMRES.
     
     Sets basic setup parameters for BEER components as defined in 
     beer.geometry and beer.components modules.
     
-    Arguments:
-    ----------
-    
+    Arguments
+    ---------
     file: str
         Output file name
     outpath: str
@@ -415,9 +411,7 @@ def createScriptSetup(file = 'BEER_setup.inp', outpath='', save=''):
 # %% SIMRES configuration scripts for reference modes settings
 
 def setHeader(comment, underline=True):
-    """
-    Print header to a command block
-    """
+    """Print header to a command block."""
     out = '\n# {}\n'.format(comment)
     if underline:
         out += '#' + 70*'-' +'\n'
@@ -425,13 +419,13 @@ def setHeader(comment, underline=True):
     
 def setSource(thermal='ESS2016_W2_thermal', cold='ESS2016_W2_cold', 
               comment='Set source tables', short=True):
-    """
-    Define source.
+    """Define source.
+    
     Set either thermal or cold to None or empty string in order to define
     mono-spectral source.
         
-    Arguments:
-    ----------
+    Arguments
+    ---------
     thermal: str
         thermal moderator table name without extension
     cold: str
@@ -461,9 +455,7 @@ def setSource(thermal='ESS2016_W2_thermal', cold='ESS2016_W2_cold',
     return out
 
 def setWRange(lrange=[0.2, 10.2], comment='Set wavelength range', underline=False):
-    """
-    Set wavelength range.
-    """
+    """Set wavelength range."""
     lam0 = 0.5*(lrange[0] + lrange[1])
     dlam = (lrange[1] - lrange[0])/lam0
     if comment:
@@ -552,8 +544,8 @@ def setOverlap(over=False, choppers=[]):
     return out
 
 def setCollimator(w=1.0, ID='RAD'):
-    """
-    Setting of radial collimator for given gauge width.
+    """Sett radial collimator for given gauge width.
+    
     Only defined are [0.5, 1, 2, 3, 4] mm
     """
     wset = [0.5, 1, 2, 3, 4]
@@ -573,9 +565,7 @@ def setCollimator(w=1.0, ID='RAD'):
 
 
 def setChopperOff(ID):
-    """
-    Stop given chopper in open position.    
-    """
+    """Stop given chopper in open position."""
     out = ''
     comp = BC.BEER[ID]
     if comp and comp['type']=='chopper':
@@ -595,9 +585,7 @@ def setSlit(ID, size=[5, 10]):
     return out
     
 def setSlits(imode):
-    """
-    Set slits for given BEEER mode.
-    """
+    """Set slits for given BEEER mode."""
     out = setHeader('Setting slits for mode={:d}'.format(imode), underline=False)
     slits = ['SL1', 'SL2', 'SL3']
     for s in slits:
@@ -609,14 +597,14 @@ def setSlits(imode):
         out += setSlit(s, size=sz)
     gex = '# # # #'.replace('#', str(BMOD.modes[imode]['GEX1']))
     out += 'set GEX1 ACTIVE {}\n'.format(gex)
-    out += 'XML GEX1\n'.format(gex)
+    out += 'XML GEX1\n'
     return out
 
 
 def setMode0():
-    """
-    Set mode F0 with all choppers stopped. This should be the initial state for 
-    switching to any other mode.
+    """Set mode F0 with all choppers stopped.
+    
+    This should be the initial state for switching to any other mode.
     """
     out = setHeader('Stop resolution choppers', underline=False)
     cchoppers = ['PSC1','PSC2', 'PSC3', 'MCA', 'MCB', 'MCC']
@@ -631,10 +619,9 @@ def setMode0():
 
 
 def adjChopper(chopper, isPSC=False, isMC=False, overlap=False):
-    """
-    Script for adjustment of given chopper. 
+    """Script for adjustment of given chopper.
     
-    Parameters:
+    Parameters
     ----------
     chopper: 
         chopper data in the format returned by beer.modes.chopper
@@ -651,10 +638,9 @@ def adjChopper(chopper, isPSC=False, isMC=False, overlap=False):
     out += 'set {} FRQ {:g}\n'.format(ID,chopper['frq'])
     out += 'set {} TIMING {}\n'.format(ID,timing)
     if isPSC:
-        out += 'set {} T0 1\n'.format(ID, 1)
+        out += 'set {} T0 1\n'.format(ID)
         out += 'set {} LOCKT0 1\n'.format(ID)
     elif isMC:
-        # always set overlap for MC choppers
         out += 'set {} T0 1\n'.format(ID)
         out += 'set {} LOCKT0 0\n'.format(ID)
     # always set overlap for MC choppers
@@ -665,9 +651,7 @@ def adjChopper(chopper, isPSC=False, isMC=False, overlap=False):
     
     
 def adjAllChoppers(imode):
-    """
-    Script section for adjustment of all choppers for given BEER mode.
-    """
+    """Script section for adjustment of all choppers for given BEER mode."""
     pchoppers = ['PSC1','PSC2', 'PSC3']
     mchoppers = ['MCA', 'MCB', 'MCC']    
    # wchoppers = ['FC1A','FC1B', 'FC2A', 'FC2B']
@@ -689,9 +673,7 @@ def adjAllChoppers(imode):
     return out
 
 def setChopperAdj(imode, value):
-    """
-    Set ADJ flag (auto adjust) for all choppers running for given mode. 
-    """
+    """Set ADJ flag (auto adjust) for all choppers running for given mode."""
     sv = ['off', 'on']
     if value:
         v = 1
@@ -703,13 +685,11 @@ def setChopperAdj(imode, value):
         out += '\n# Set auto-adjust {}\n'.format(sv[v])
         for c in cs:
             out += 'set {} ADJ {:d} \n'.format(c['id'],v)
-            out += 'XML {} \n'.format(c['id'],v)
+            out += 'XML {} \n'.format(c['id'])
     return out
  
 def adjWavelength(imode, lrange=[0.2, 10.2]):
-    """
-    Set wavelength and adjust chopper phases.
-    """
+    """Set wavelength and adjust chopper phases."""
     m = BMOD.modes[imode] 
     lam = m['lam0']
     lmax = lrange[1]
@@ -727,45 +707,34 @@ def adjWavelength(imode, lrange=[0.2, 10.2]):
     return out 
 
 def setPSCdist(imode):
-    """
-    Generates SIMRES script with commands required to 
-    set the PSC2 chopper distance required for given mode.  
+    """Generate SIMRES script for seting PSC2 distance.
+
+    Set the PSC2 chopper distance required for given mode.  
     
-    The guide sections GCA3 and GCA4 are attached to the chopper and move with it.
-    SIMRES defines distances relatively to the preceding component. 
-    To change the PSC2-PSC1 distance, we therefore need tu adjust the relative
-    distances for GCA3 and GCB (the next guide segment).
+    Assumes no guides attached to the movable chopper. 
     
     """
     m = BMOD.modes[imode]
     
     out = ''
-    if 'PSC2dist' in m:
-        
+    if 'PSC2dist' in m:        
         # required PSC2-PSC1 distance
-        PSC2dist = m['PSC2dist']
-        
+        PSC2dist = m['PSC2dist']        
         # absolute distance of GCB is constant  
-        GCBstart = BC.BEER['GCB']['start']
-        # absolute distance of PSC1 is constant  
-        PSC1start = BC.BEER['PSC1']['dist']
+        GCBstart = BC.BEER['GCB']['start']    
         # relative distance of GCA2 from PSC1 is constant
-        GCA2_PSC1 = BC.BEER['GCA2']['start'] - BC.BEER['PSC1']['dist']
-        # relative distance of PSC2 from GCA3 is constant
-        PSC2_GCA3 = BC.BEER['PSC2']['dist'] - BC.BEER['GCA3']['start']
-        # relative distance of GCA4 from PSC2 is constant
-        GCA4_PSC2 = BC.BEER['GCA4']['start'] - BC.BEER['PSC2']['dist']
+        GCA2_PSC1 = BC.BEER['GCA2']['start'] - BC.BEER['PSC1']['dist'] 
         
-        # new rel. distance of GCA3 from GCA2
-        GCA3dist = PSC2dist - PSC2_GCA3 - GCA2_PSC1
         
-        # new rel. distance of GCB
-        GCBdist = GCBstart - PSC1start - PSC2dist - GCA4_PSC2
+        # new relative distance of PSC2 from GCA2
+        PSC2_GCA2 = PSC2dist - GCA2_PSC1
+        # new rel. distance of GCB from PSC2
+        GCBdist = GCBstart - BC.BEER['PSC1']['dist'] - PSC2dist
         
         fmt = 'set {} dist {:g}\nXML {}\n'
         out += '\n'
-        key = BC.BEER['GCA3']['key']
-        out += fmt.format(key,GCA3dist, key)
+        key = BC.BEER['PSC2']['key']
+        out += fmt.format(key,PSC2_GCA2, key)
         key = BC.BEER['GCB']['key']
         out += fmt.format(key,GCBdist, key)
     return out
@@ -773,8 +742,7 @@ def setPSCdist(imode):
 
 
 def scriptPlot(imode, what='lam', lrange=[0.2, 10.2], nx=100, suffix=''):
-    """
-    Creates script section for plotting and saving graphs.
+    """Create script section for plotting and saving graphs.
     
     Parametes:
     ----------
@@ -821,8 +789,8 @@ def scriptPlot(imode, what='lam', lrange=[0.2, 10.2], nx=100, suffix=''):
 def scriptMode(imode, ncnt=10000, lrange=[0.2, 10.2], exe=True, 
                plot=['x', 'y', 'kx', 'ky', 'lam', 't'],
                upstream=True):
-    """
-    Return script for setting and execution of given BEER mode.
+    """Return script for setting and execution of given BEER mode.
+    
     Arguments:
     ---------
     imode: it
@@ -872,8 +840,9 @@ def scriptMode(imode, ncnt=10000, lrange=[0.2, 10.2], exe=True,
 def scriptDS1(imode, ncnt=10000, lrange=[0.2, 10.2], exe=True, 
                plot=['x', 'y', 'kx', 'ky', 'lam', 't'],
                upstream=True):
-    """
-    Calls scriptMode(). If imode corresponds to the 'DS1' mode 
+    """Call scriptMode().
+    
+    If imode corresponds to the 'DS1' mode 
     (pulse suppression with alternate frames), then include 2nd simulations 
     for cold wavelength frame.
     

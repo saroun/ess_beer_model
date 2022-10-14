@@ -376,21 +376,21 @@ def defineComponents():
         
     # start of the chopper section
     PSC1_dist = 6450
-    PSC1_width = 200 # width of the PSC1 housing 
-    # format chopper guide section:
-        
+    PSC2_dist = 6850
+    PSC2_width = 62 # width of the PSC2 housing 
+    dist12 = 210
+    #PSC1_width = 200 # width of the PSC1 housing
+    GCA2_len=PSC2_dist-PSC1_dist-0.5*PSC2_width-dist12-go-w-gcg
+    # format chopper guide section: 
     BEER['GCA1'] =  getChopperGuide('4-01',BEER['GSW']['end']+20, PSC1_dist-gcg)
     BEER['PSC1'] = chopper('PSC1',PSC1_dist, desc='pulse shaping')
-    BEER['GCA2'] =  getChopperGuide('4-02', PSC1_dist+gcg, PSC1_dist+0.5*PSC1_width-gw)
+    BEER['GCA2'] =  getChopperGuide('4-02', PSC1_dist+gcg, PSC1_dist+gcg+GCA2_len)
     BEER['W5'] = window('W5', BEER['GCA2']['end']+go)
-    
-    PSC2_dist = 6850
-    PSC2_width = 200 # width of the PSC2 housing 
-    BEER['W6'] = window('W6', PSC2_dist-0.5*PSC2_width)
-    BEER['GCA3'] =  getChopperGuide('4-03', BEER['W6']['end']+go, PSC2_dist-gcg)
+    BEER['W6'] = window('W6', BEER['W5']['end'] + dist12)
+#    BEER['GCA3'] =  getChopperGuide('4-03', BEER['W6']['end']+go, PSC2_dist-gcg)
     BEER['PSC2'] = chopper('PSC2',PSC2_dist, desc='pulse shaping, variable distance 6650 to 6850')
-    BEER['GCA4'] =  getChopperGuide('4-04', PSC2_dist+gcg, PSC2_dist+0.5*PSC2_width-gw)
-    BEER['W7'] = window('W7', BEER['GCA4']['end']+go)
+#    BEER['GCA4'] =  getChopperGuide('4-04', PSC2_dist+0.5*PSC2_widthgcg, PSC2_dist+0.5*PSC2_width-gw)
+    BEER['W7'] = window('W7', PSC2_dist + 0.5*PSC2_width-w)
     
     PSC3_dist = 7375
     FC1_dist = 8300

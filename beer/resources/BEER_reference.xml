@@ -470,36 +470,6 @@
 				<LOGBNC name="log bounces" value="0">none</LOGBNC>
 			</GUIDE>
 		</FRAME>
-		<FRAME class="GUIDE" id="GCA3" name="chopper guide A3">
-			<DIST name="distance" units="mm">277.0</DIST>
-			<SHAPE name="shape" value="3">box</SHAPE>
-			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 65.63 73.0</SIZE>
-			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
-			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
-			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
-			<VEL name="velocity" units="m.s^-1">0.0 0.0 0.0</VEL>
-			<GUIDE>
-				<TYPE name="type" value="1">guide or bender</TYPE>
-				<EXIT name="exit window" units="mm">20.0 65.91</EXIT>
-				<RO name="curvature" units="m^-1">0.0 0.0</RO>
-				<N name="slits">1 1</N>
-				<DL name="lamella thickness" units="mm">1.0E-2 1.0E-2</DL>
-				<M name="m-value" units="Ni_nat">4.0 3.0</M>
-				<REF name="reflectivity" units=" ">0.0 0.0</REF>
-				<MATER name="blade material" value="0">absorbing</MATER>
-				<MU name="absorption" units="cm^-1A^-1">1.0E5</MU>
-				<WAV name="waviness" units="mrad">0.2</WAV>
-				<MISALIGN name="misalignment" units="mm">2.0E-2 2.0E-2</MISALIGN>
-				<MONITOR name="monitor" value="0">no</MONITOR>
-				<CLOSED name="closed" value="0">no</CLOSED>
-				<ONESIDE name="one-sided" value="0">no</ONESIDE>
-				<NODIR name="no direct view" value="0">no</NODIR>
-				<TRFRONT name="front transmission" value="0">no</TRFRONT>
-				<OSC name="oscillate" value="0">no</OSC>
-				<LOGBNC name="log bounces" value="0">none</LOGBNC>
-			</GUIDE>
-		</FRAME>
 		<FRAME class="DCHOPPER" id="PSC2" name="PS chopper 2">
 			<DIST name="distance" units="mm">98.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
@@ -523,36 +493,6 @@
 				<T0 name="T0" value="0">no</T0>
 				<LOCKT0 name="lock to T0" value="0">no</LOCKT0>
 			</DCHOPPER>
-		</FRAME>
-		<FRAME class="GUIDE" id="GCA4" name="chopper guide A4">
-			<DIST name="distance" units="mm">25.0</DIST>
-			<SHAPE name="shape" value="3">box</SHAPE>
-			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 66.1 73.0</SIZE>
-			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
-			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
-			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
-			<VEL name="velocity" units="m.s^-1">0.0 0.0 0.0</VEL>
-			<GUIDE>
-				<TYPE name="type" value="1">guide or bender</TYPE>
-				<EXIT name="exit window" units="mm">20.0 66.37</EXIT>
-				<RO name="curvature" units="m^-1">0.0 0.0</RO>
-				<N name="slits">1 1</N>
-				<DL name="lamella thickness" units="mm">1.0E-2 1.0E-2</DL>
-				<M name="m-value" units="Ni_nat">4.0 3.0</M>
-				<REF name="reflectivity" units=" ">0.0 0.0</REF>
-				<MATER name="blade material" value="0">absorbing</MATER>
-				<MU name="absorption" units="cm^-1A^-1">1.0E5</MU>
-				<WAV name="waviness" units="mrad">0.2</WAV>
-				<MISALIGN name="misalignment" units="mm">2.0E-2 2.0E-2</MISALIGN>
-				<MONITOR name="monitor" value="0">no</MONITOR>
-				<CLOSED name="closed" value="0">no</CLOSED>
-				<ONESIDE name="one-sided" value="0">no</ONESIDE>
-				<NODIR name="no direct view" value="0">no</NODIR>
-				<TRFRONT name="front transmission" value="0">no</TRFRONT>
-				<OSC name="oscillate" value="0">no</OSC>
-				<LOGBNC name="log bounces" value="0">none</LOGBNC>
-			</GUIDE>
 		</FRAME>
 		<FRAME class="GUIDE" id="GCB" name="chopper guide B">
 			<DIST name="distance" units="mm">87.0</DIST>
