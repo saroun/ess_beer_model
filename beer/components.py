@@ -22,12 +22,15 @@ update 2020-05-18: revision 1.6
     Added doc strings.
     Added definitions for radial collimators.
     Reduced windows for FC2A and FC2B to 175 and 85 deg, respectively
+update 2022-10-14: revision 1.7
+    Updated PSC1-PSC2 sector according to the design (no movable guides)
+    Bug fix - remove smoothness of guides TG1, TG2 
 """
 
 import beer.geometry as B
 import datetime
 import numpy as np
-VERSION = '1.6'
+VERSION = '1.7'
 DATE = datetime.datetime.now().strftime("%B %d, %Y, %H:%M:%S")
 
 #%% Define global data
