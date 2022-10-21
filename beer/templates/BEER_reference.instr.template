@@ -643,11 +643,13 @@ lam0 = nominal wavelength for chopper phase calculation
         GF3On = mod_GF3[m];
 
         // movable PSC2 with fixed GCA3 and GCA4
-        double d1 = PSC2.dist - GCA3.dist;
-        double d2 = PSC2.dist - GCA4.dist;
+        //double d1 = PSC2.dist - GCA3.dist;
+        //double d2 = PSC2.dist - GCA4.dist;
         PSC2.dist = PSC1.dist + mod_PSC2dist[m]*0.001;
-        GCA3.dist = PSC2.dist - d1;
-        GCA4.dist = PSC2.dist - d2;
+        //GCA3.dist = PSC2.dist - d1;
+        //GCA4.dist = PSC2.dist - d2;
+		
+		
         
         // adjust resolution choppers
         foc_time = 0;

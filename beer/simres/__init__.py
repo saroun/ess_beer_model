@@ -91,7 +91,7 @@ def update(scriptonly=False):
         if true, only create the SIMRES script BEER_setup.inp, do not execute it.
 
     """
-    _exe.runSetup(verify = not scriptonly)
+    _exe.runSetup(verify=not scriptonly, run_setup=not scriptonly)
     
     
 def execute(modes=None, n=10000, plot=False, runsetup=False):

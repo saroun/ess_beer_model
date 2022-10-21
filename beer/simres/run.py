@@ -731,18 +731,21 @@ def runSimulation(mode, config=None, ncnt=10000, upstream=True, verbose=1,
     return out
 
 
-def runSetup(verify=True):
-    """
-    Create input script for setting up BEER instrument configuration,
-    launch SIMRES and update the instrument file [BEER_reference.xml]
-    according to actual beam geometry definition. 
+def runSetup(verify=True, run_setup=True):
+    """Create input script for setting up BEER instrument configuration.
+    
+    Optionally, launch SIMRES and update the instrument file
+    [BEER_reference.xml] according to actual beam geometry definition. 
     
     Assumes that SIMRES configuration has already been defined.
     
-    Parameters:
-    -----------
-    verify: boolean
+    Parameters
+    ----------
+    verify : boolean
         if true, verify SIMRES and Java
+    
+    run_setup : boolean
+        Run the stup script  
     
     See setConfig().
     """
@@ -758,10 +761,12 @@ def runSetup(verify=True):
                            save=os.path.join(config['CFGPATH'],config['CFGFILE']))
     
     # Run SIMRES to execute BEER_setup.inp
-    res = runScript(script='BEER_setup.inp', log='setup')
-    if not res:
-        src = os.path.basename(__file__)
-        print('{}.runSimulation: Execution failed'.format(src))
+    res = False
+    if run_setup:
+        res = runScript(script='BEER_setup.inp', log='setup')
+        if not res:
+            src = os.path.basename(__file__)
+            print('{}.runSimulation: Execution failed'.format(src))
     return res
 
 
