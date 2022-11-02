@@ -16,6 +16,7 @@
 13	SANS	White beam	SANS	10.0	10.0	15.0	15.0	20.0	20.0	0	6.00	0	1
 14	DS0	diffraction + SANS, modulation	in-situ thermomechanical experiment	5.0	10.0	25.0	25.0	40.0	40.0	0	4.00	7	2
 15	DS1	diffraction + SANS, pulse shaping	in-situ thermomechanical experiment	5.0	10.0	25.0	25.0	40.0	40.0	0	2.10	1	3
+16	M4	High resolution, modulation x 4	strain scanning	1.0	3.0	8.0	50.0	12.0	0.0	0	2.10	8	1
 
 # Resolution chopper modes [cmode], frequency in Hz
 # ID	 	description	 	PSC1	PSC2	PSC3	MCA	MCB	MCC	
@@ -27,6 +28,7 @@
 5		MC, medium resolution		0	0	0	140	0	0
 6		MC, high resolution		0	0	0	280	0	0
 7		MC, SANS mode		0	0	0	0	0	70
+8		MC, AB mode		0	0	0	140	280	0
 
 # Resolution chopper modes [cphases], angular shift in deg
 # ID	 	description	 	PSC1	PSC2	PSC3	MCA	MCB	MCC	
@@ -38,6 +40,7 @@
 5		MC, medium resolution		0	0	0	0	0	0
 6		MC, high resolution		0	0	0	0	0	0
 7		MC, SANS mode		0	0	0	0	0	-90
+8		MC, AB mode		0	0	0	0	0	0
 
 # Wavelength selection chopper modes [wmode], frequency in Hz
 # ID	 	description	 	FC1A	FC1B	FC2A	FC2B	

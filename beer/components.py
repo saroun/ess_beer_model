@@ -149,7 +149,7 @@ def guide(num, start, end, desc, m=[4., 4., 4., 4.], gh = None, gv=None,
         el['exit'] = wexit        
     return el
   
-def chopper(name, distance, desc, status=True, thickness=10, fmax=280, win=144, wctr=[0]):
+def chopper(name, distance, desc, status=True, thickness=10, fmax=168, win=144, wctr=[0]):
     """
     Defines parameters for a chopper.
     
@@ -410,16 +410,16 @@ def defineComponents():
     wctr = []
     for i in range(8):
         wctr.append(i*360/8)
-    BEER['MCA'] =  chopper('MCA',MCA_dist, fmax=280, win='8 x 4', wctr=wctr, desc='modulation')
+    BEER['MCA'] =  chopper('MCA',MCA_dist, fmax=280, win='8 x 5', wctr=wctr, desc='modulation')
     wctr = []
     for i in range(16):
         wctr.append(i*360/16)
-    BEER['MCB'] =  chopper('MCB',MCB_dist, fmax=280, win='16 x 4', wctr=wctr, desc='modulation', status=False)
+    BEER['MCB'] =  chopper('MCB',MCB_dist, fmax=280, win='16 x 5', wctr=wctr, desc='modulation', status=False)
     BEER['GCF'] =  getChopperGuide(8, MCB_dist+gcg, MCC_dist-gcg)
     wctr = [0]
     for i in range(7):
         wctr.append(90+(i+1)*180/8)
-    BEER['MCC'] =  chopper('MCC',MCC_dist, fmax=280, win='180 + 7 x 4', wctr=wctr, desc='modulation', status=False)
+    BEER['MCC'] =  chopper('MCC',MCC_dist, fmax=280, win='180 + 7 x 5', wctr=wctr, desc='modulation', status=False)
     BEER['GCG'] =  getChopperGuide(9, MCC_dist+gcg, B.curve1_begin-gw-10-gw)
     BEER['W9'] = window('W9', B.curve1_begin-gw-10-w)
     # end of the chopper section    
@@ -474,7 +474,7 @@ def defineComponents():
         'transport guide before chopper', m=[2.0, 2.5, 2., 2.], RH=1e-6/B.curve2)
     BEER['FC2A'] = chopper('FC2A',FC2_dist-0.5*gc, fmax=14, win=175, 
         desc='wavelength frame definition')
-    BEER['FC2B'] = chopper('FC2B',FC2_dist+0.5*gc, fmax=7, win=85, 
+    BEER['FC2B'] = chopper('FC2B',FC2_dist+0.5*gc, fmax=14, win=85, 
         desc='wavelength frame definition', status=False)
     # added 5 mm B4C mask
     BEER['GT2'] =  guide(17, FC2_dist+0.5*gc+gcg+5, 144498.15, 

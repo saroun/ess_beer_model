@@ -25,7 +25,7 @@ Reference chopper modes (pulse definition)
 """
 # chopper modes for: label, PSC1, PSC2, PSC3, MCA, MCB, MCC
 
-cmodes = 8*[0]
+cmodes = 9*[0]
 cmodes[0] = ['full pulse', 0,  0, 0, 0, 0, 0 ]
 cmodes[1] = ['PSC, high flux', 168,  0, -168, 0, 0, 0 ]
 cmodes[2] = ['PSC, medium resolution', 168, -168, 0, 0, 0, 0 ]
@@ -34,9 +34,10 @@ cmodes[4] = ['MC, high flux', 0, 0, 0, 70, 0, 0 ]
 cmodes[5] = ['MC, medium resolution', 0, 0, 0, 140, 0, 0 ]
 cmodes[6] = ['MC, high resolution', 0, 0, 0, 280, 0, 0 ]
 cmodes[7] = ['MC, SANS mode', 0, 0, 0, 0, 0, 70 ]
+cmodes[8] = ['MC, AB mode', 0, 0, 0, 140, 280, 0 ]
 
 # initial phases [deg]
-cphases = 8*[6*[0]]
+cphases = 9*[6*[0]]
 cphases[1] = [72, 0, 72, 0, 0, 0]
 cphases[2] = [72, 72, 0, 0, 0, 0]
 cphases[3] = [72, 72, 0, 0, 0, 0]
@@ -62,7 +63,7 @@ wphases[3] = [-9, 0, 0, 0]
 
 
 # %% Definition of BEER reference operation modes
-modes = 16*[None]
+modes = 17*[None]
 
 def defMode(ID, slits, foc=True, lam=2.1, cm=[0, 0], PSC2dist=0, FC1A_dphi=0):
     """
@@ -236,6 +237,11 @@ modes[i] = defMode(
         slits=[[5,10], [25,25], [40,40]], foc=0, lam=2.1, cm=[1, 3]
         )
 
+i += 1
+modes[i] = defMode(
+        ID=['M4', 'High resolution, modulation x 4',	'strain scanning'],
+        slits=[[1,3], [8,50], [12,0]], foc=0, lam=2.1, cm=[8, 1]
+        )
 
 # %%  Define parsing functions
 
