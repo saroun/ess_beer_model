@@ -591,7 +591,7 @@ Allowed widths are 0.5, 1, 2, 3, 4 mm
 m = operation mode
 lam0 = nominal wavelength for chopper phase calculation
 */  
-    void setMode(int m, double lam0) {
+    void setMode(int m, double lam0, int nseg) {
         double v0 = K2V*2*PI/lam0; 
         
         // wavelength bandwidth corresponfding to 1 period
@@ -604,7 +604,7 @@ lam0 = nominal wavelength for chopper phase calculation
         
         // set bi-spectral switch on or off
         if (bs_on) {
-            GSW.nseg=150;
+            GSW.nseg=nseg;
         } else {
             GSW.nseg=0;
         }	
@@ -860,7 +860,7 @@ End of components definition
 /* 
  Set operation mode (adjusts choppers and slits according to the predefined values.
 */  
-    setMode(mode, lambda);
+    setMode(mode, lambda, GSW.nseg);
 
 // adjust sample slit: input parameters override values from default modes:
 	if (s3w>0) SL3.w=s3w;

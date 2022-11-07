@@ -258,40 +258,50 @@ def window(name, distance, thickness=0.5):
     el['thickness']=thickness
     return el
 
-def switch(num, distance, thickness=15, m=[3., 3., 0., 0.], size=[22.5, 65.]):
-    """
-    Defines parameters for a bi-spectral switch.
+def switch(num, distance, thickness=15, m=[3., 3., 0., 0.], 
+           size=[22.5, 65.], nlam=149, dlam=0.15, angle=-0.57):
+    """Define parameters for a bi-spectral switch.
     
-    Arguments:
+    Parameters
     ----------
-    num: int or string
+    num : int or string
         Component ID. An integer is parsed to string as 'W02-{:d}'. 
-    distance: float
+    distance : float
         entry distance
-    thickness: float
+    thickness : float
         thickness (length)
-    m: array(4)
+    m : array(4)
         m-values for left, right, top, bottom
-    size: float(2)
+    size : float(2)
         [width, height]
+    nlam : int
+        Number of blades.
+    dlam : float
+        Blade thickness in mm.
+    angle : float
+        Rotation angle in deg.
+        
     """    
     el={}
     el['id'] = 'W02-{}'.format(num)
     el['dist'] = distance
     el['start']=distance
     el['end'] = distance+thickness
-    el['desc']='bi-spectral switch, adjustable angle, movable on/off the beam'
     el['type']='optics'
     el['thickness']=thickness
     el['m']=m
-    el['gh']='stack of 150 um Si wafers, angle=-0.57o rel. to ISCS_x axis'
-    el['gv']=' '
     el['RH']=0.
     el['RV']=0.
     el['const'] = True
     prof = [0.5*size[0], -0.5*size[0], 0.5*size[1], -0.5*size[1], size[0], size[1]]
     el['prof'] = prof
     el['substr'] = 'Si'
+    el['dlam'] = dlam
+    el['nlam'] = nlam
+    el['angle'] = angle
+    el['desc']='bi-spectral switch, adjustable angle, movable on/off the beam'
+    el['gv']=' '
+    el['gh']='stack of {:g} um Si wafers, angle={:g}o rel. to ISCS_x axis'.format(dlam*1000, angle)
     
     return el
 

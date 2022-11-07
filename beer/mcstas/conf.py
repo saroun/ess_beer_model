@@ -520,7 +520,7 @@ def infoGuideTapering(key, nseg=1, isTilted=False, ellH='', ellV=''):
         info['ell'] = {'file':'prof_{}.txt'.format(key), 'ID':ellV, 'dir':1}
     return info
 
-def infoGuideMultichannel(key, angle=-0.57, blades=150):
+def infoGuideMultichannel(key):
     """
     Create info with properties of given component: Guide_multichannel.
     
@@ -529,10 +529,6 @@ def infoGuideMultichannel(key, angle=-0.57, blades=150):
     
     key: str
         component ID
-    angle: str
-        rotation angle [deg]
-    blades: str
-        number of Si blades
         
     Return:
     -------
@@ -545,14 +541,15 @@ def infoGuideMultichannel(key, angle=-0.57, blades=150):
     # add additional info
     info['mx'] = '{:g}'.format(comp['m'][0])
     info['my'] = '{:g}'.format(comp['m'][2])
-    info['nseg'] = '{:g}'.format(blades)
+    info['nseg'] = '{:g}'.format(comp['nlam'])
     dist = comp['dist']
-    angle = angle + BG.beamAngle(dist, coord = 'ISCS')
+    angle = comp['angle'] + BG.beamAngle(dist, coord = 'ISCS')
     axis = BG.beamAxis(dist, coord = 'ISCS')
     length = comp['end']-comp['start']
     shift = -0.5*length*np.tan(angle*deg) + axis[1]
     info['angle'] = '{:.5f}'.format(angle)
     info['shift'] = '{:.5f}'.format(shift*0.001)
+    info['dlam'] = '{:.7f}'.format(comp['dlam']*0.001)
     return info
 
 
@@ -918,7 +915,7 @@ def cfgComponent(comp, indent='    '):
         out = cfgGuideBasic(info, indent)
         # define additional parameters
         fmt = indent+'{}.{}={};\n'
-        varkeys = ['mx', 'my', 'nseg']
+        varkeys = ['mx', 'my', 'nseg', 'dlam']
         for p in varkeys:
             if (p in info.keys()):
                 out += fmt.format(ID, p, info[p])
@@ -1294,7 +1291,7 @@ def defineInstrument():
     addMonitor(beamMonolith,'BBG')
     
     # Add Bunker section
-    addComponent(TGuideMC, beamBunker,'GSW', angle=-0.57, blades=150)
+    addComponent(TGuideMC, beamBunker,'GSW')
     addMonitor(beamBunker,'GSW')
     addComponent(TGuide, beamBunker,'GCA1')
     addComponent(TCDisc, beamBunker, 'PSC1')

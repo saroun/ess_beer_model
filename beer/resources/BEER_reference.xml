@@ -367,7 +367,7 @@
 			<VEL name="velocity" units="m.s^-1">0.0 0.0 0.0</VEL>
 			<GUIDE>
 				<TYPE name="type" value="1">guide or bender</TYPE>
-				<EXIT name="exit window" units="mm">22.5 62.06</EXIT>
+				<EXIT name="exit window" units="mm">22.5 65.0</EXIT>
 				<RO name="curvature" units="m^-1">0.0 0.0</RO>
 				<N name="slits">149 1</N>
 				<DL name="lamella thickness" units="mm">0.15 1.0E-2</DL>
