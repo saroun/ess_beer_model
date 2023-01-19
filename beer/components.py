@@ -25,12 +25,14 @@ update 2020-05-18: revision 1.6
 update 2022-10-14: revision 1.7
     Updated PSC1-PSC2 sector according to the design (no movable guides)
     Bug fix - remove smoothness of guides TG1, TG2 
+update 2023-01-18: revision 1.8
+    Added gaps for beam monitors. GSW and BM1 outside vacuum housing.
 """
 
 import beer.geometry as B
 import datetime
 import numpy as np
-VERSION = '1.7'
+VERSION = '1.8'
 DATE = datetime.datetime.now().strftime("%B %d, %Y, %H:%M:%S")
 
 #%% Define global data
@@ -258,6 +260,35 @@ def window(name, distance, thickness=0.5):
     el['thickness']=thickness
     return el
 
+def monitor(name, distance, desc, thickness=19, size=None):
+    """
+    Defines parameters of a beam monitor.
+    
+    Arguments:
+    ---------
+    name: str
+        component ID
+    distance: float
+        distance to the centre
+    desc: str
+        description text
+    thickness: float
+        thickness  
+    size: optional
+        [width, height]. If not defined, the size is calculated by beam.geometry.
+    """
+    el = {}
+    el['id'] = name
+    el['dist'] = distance
+    el['start'] = distance-0.5*thickness
+    el['end'] = distance+0.5*thickness
+    el['desc'] = desc
+    el['type'] = 'monitor'
+    el['thickness']=thickness
+    if (size is not None):
+        el['size'] = size
+    return el
+
 def switch(num, distance, thickness=15, m=[3., 3., 0., 0.], 
            size=[22.5, 65.], nlam=149, dlam=0.15, angle=-0.57):
     """Define parameters for a bi-spectral switch.
@@ -380,43 +411,52 @@ def defineComponents():
         m=[2.5, 2.5, 4., 4.], gv='flat expanding, on ellipse '+getEllStr(B.E1), 
         substr='Cu')
     BEER['W3'] = window('W3', bbg_win2, thickness=0.5)
+    # bi-spectral switch, assumed to be outside the 1st guide and chopper housing
+    BEER['GSW'] =  switch(3, 5921.30, m=[3., 3., 0., 0.])
         
-    # bi-Switch window, 0.5 mm
-    bsw_win = 5911.30
-    BEER['W4'] = window('W4', bsw_win)
-    # bi-spectral switch, assumed to be inside the 1st guide and chopper housing
-    BEER['GSW'] =  switch(3, 5931.80, m=[3., 3., 0., 0.])
-        
-    # start of the chopper section
+    
+    # BM1 monitor position
+    BM1_dist = 5953.8
+    BM1_len = 19
+    BM1_gap = 3    
+    
+    BEER['BM1'] = monitor('BM1', BM1_dist,'', thickness=BM1_len)
+    
+    # window after bi-spectral switch, 0.5 mm
+    # start of the 1st chopper housing
+    BEER['W4'] = window('W4', BM1_dist+0.5*BM1_len+BM1_gap)        
     PSC1_dist = 6450
     PSC2_dist = 6850
     PSC2_width = 62 # width of the PSC2 housing 
-    dist12 = 210
-    #PSC1_width = 200 # width of the PSC1 housing
-    GCA2_len=PSC2_dist-PSC1_dist-0.5*PSC2_width-dist12-go-w-gcg
+    gap12 = 210 # air gap between PSC1, PSC2 in the most distant position 
     # format chopper guide section: 
-    BEER['GCA1'] =  getChopperGuide('4-01',BEER['GSW']['end']+20, PSC1_dist-gcg)
+    BEER['GCA1'] =  getChopperGuide('4-01',BEER['W4']['end']+1.8, PSC1_dist-15)
     BEER['PSC1'] = chopper('PSC1',PSC1_dist, desc='pulse shaping')
-    BEER['GCA2'] =  getChopperGuide('4-02', PSC1_dist+gcg, PSC1_dist+gcg+GCA2_len)
+    BEER['GCA2'] =  getChopperGuide('4-02', PSC1_dist+15, 
+                                    PSC2_dist-0.5*PSC2_width-gap12-gw)
     BEER['W5'] = window('W5', BEER['GCA2']['end']+go)
-    BEER['W6'] = window('W6', BEER['W5']['end'] + dist12)
+    # end of the 1st chopper housing
+    # start of the PSC2 movable housing
+    BEER['W6'] = window('W6', BEER['W5']['end'] + gap12)
 #    BEER['GCA3'] =  getChopperGuide('4-03', BEER['W6']['end']+go, PSC2_dist-gcg)
     BEER['PSC2'] = chopper('PSC2',PSC2_dist, desc='pulse shaping, variable distance 6650 to 6850')
 #    BEER['GCA4'] =  getChopperGuide('4-04', PSC2_dist+0.5*PSC2_widthgcg, PSC2_dist+0.5*PSC2_width-gw)
     BEER['W7'] = window('W7', PSC2_dist + 0.5*PSC2_width-w)
+    # end of the PSC2 movable housing
     
     PSC3_dist = 7375
     FC1_dist = 8300
     MCA_dist = 9300
     MCB_dist = 9350
     MCC_dist = 9875
+    # start of the main chopper housing
     BEER['W8'] = window('W8', BEER['W7']['end']+10)
-    BEER['GCB'] =  getChopperGuide(5, BEER['W8']['end']+go, PSC3_dist-gcg)
+    BEER['GCB'] =  getChopperGuide(5, BEER['W8']['end']+go, PSC3_dist-15.0)
     BEER['PSC3'] = chopper('PSC3',PSC3_dist, 'pulse shaping', status=False)
-    BEER['GCC'] =  getChopperGuide(6, PSC3_dist+gcg, FC1_dist-0.5*gc-gcg)
-    BEER['FC1A'] = chopper('FC1A',FC1_dist-0.5*gc, fmax=28, win=72, desc='WFD')
-    BEER['FC1B'] = chopper('FC1B',FC1_dist+0.5*gc, fmax=70, win=180, desc='WFD', status=False)
-    BEER['GCE'] =  getChopperGuide(7, FC1_dist+0.5*gc+gcg, MCA_dist-gcg)
+    BEER['GCC'] =  getChopperGuide(6, PSC3_dist+15.0, FC1_dist-0.5*34.0-15.0)
+    BEER['FC1A'] = chopper('FC1A',FC1_dist-0.5*34.0, fmax=28, win=72, desc='WFD')
+    BEER['FC1B'] = chopper('FC1B',FC1_dist+0.5*34.0, fmax=70, win=180, desc='WFD', status=False)
+    BEER['GCE'] =  getChopperGuide(7, FC1_dist+0.5*34.0+15.0, MCA_dist-15.0)
     wctr = []
     for i in range(8):
         wctr.append(i*360/8)
@@ -425,24 +465,39 @@ def defineComponents():
     for i in range(16):
         wctr.append(i*360/16)
     BEER['MCB'] =  chopper('MCB',MCB_dist, fmax=280, win='16 x 5', wctr=wctr, desc='modulation', status=False)
-    BEER['GCF'] =  getChopperGuide(8, MCB_dist+gcg, MCC_dist-gcg)
+    BEER['GCF'] =  getChopperGuide(8, MCB_dist+15.0, MCC_dist-15.0)
     wctr = [0]
     for i in range(7):
         wctr.append(90+(i+1)*180/8)
     BEER['MCC'] =  chopper('MCC',MCC_dist, fmax=280, win='180 + 7 x 5', wctr=wctr, desc='modulation', status=False)
-    BEER['GCG'] =  getChopperGuide(9, MCC_dist+gcg, B.curve1_begin-gw-10-gw)
-    BEER['W9'] = window('W9', B.curve1_begin-gw-10-w)
-    # end of the chopper section    
+    BEER['GCG'] =  getChopperGuide(9, MCC_dist+15, B.curve1_begin-0.5)
+    
+    # Start of the curved guide, vertical elliptic expansion
+    # BM2 monitor position
+    BM2_dist = 10315
+    BM2_len = 19
+    BM2_gap = 3
+    # 1st segment of the curved expanding guide before BM2 monitor
+    BEER['GE1s'] =  guide(9, B.curve1_begin, 
+                                    BM2_dist-0.5*BM2_len-BM2_gap-gw, 
+        'NOTE: 1st segment of the bent guide', m=[3., 2.5, 3., 3.], 
+        RH=1e-6/B.curve1, gv=B.E1, substr='Cu'
+                                    )
+    BEER['W9'] = window('W9', BEER['GE1s']['end']+go)
+    # end of the main chopper housing    
+    
+    BEER['BM2'] = monitor('BM2', BM2_dist,'', thickness=BM2_len)
+    
+    # start of the GE1+GN1 housing
+    BEER['W10'] = window('W10', BM2_dist+0.5*BM2_len+BM2_gap)
+    BEER['GE1'] =  guide(10, BEER['W10']['end']+go, B.E1['c'], 
+        'NOTE: bent & vertically expanding !', m=[3., 2.5, 3., 3.], 
+        RH=1e-6/B.curve1, gv=B.E1, substr='Cu')
     
     # bunker wall throughput:
     wall_in=24500.0 # start of the bunker wall insert optics
     wall_out=27998.0  # end of the bunker wall insert optics
     
-    # Start of the curved guide, vertical elliptic expansion
-    BEER['W10'] = window('W10', B.curve1_begin-gw)
-    BEER['GE1'] =  guide(10, B.curve1_begin, B.E1['c']-g, 
-        'NOTE: bent & vertically expanding !', m=[3., 2.5, 3., 3.], 
-        RH=1e-6/B.curve1, gv=B.E1, substr='Cu')
     # Curved guide, parallel, inside bunker
     BEER['GN1'] =  guide(11, B.E1['c'], wall_in-g,' ', 
         m=[3., 2.5, 2., 2.], RH=1e-6/B.curve1, substr='Cu')
@@ -773,7 +828,7 @@ def getSampleData(dist, coord = 'FP'):
     rec['comment'] = com
     return rec
 
-def getWindowData(comp, coord = 'FP'):
+def getWindowData(comp):
     """Return hash map with strings for component row cells
     """        
     dist =  comp['start']
@@ -781,6 +836,22 @@ def getWindowData(comp, coord = 'FP'):
     L = comp['thickness']   
     com = comp['desc']    
     rec = createRec(dist, comp['type'])
+    rec['ID'] = comp['id']
+    rec['end'] = '{:.1f}'.format(end)
+    rec['length'] = '{:.1f}'.format(L)
+    rec['comment'] = com
+    return rec
+
+def getMonitorData(comp):
+    """Return hash map with strings for component row cells
+    """        
+    dist =  comp['start']
+    end = comp['end']
+    L = comp['thickness']   
+    com = comp['desc']    
+    rec = createRec(dist, comp['type'])
+    rec['ID'] = comp['id']
+    rec['name'] = comp['key']
     rec['end'] = '{:.1f}'.format(end)
     rec['length'] = '{:.1f}'.format(L)
     rec['comment'] = com
@@ -817,7 +888,9 @@ def getComponentData(comp, coord = 'ISCS'):
     elif (comp['type'] == 'chopper'):
         row = getChopperData(comp, coord = coord) 
     elif (comp['type'] == 'window'):
-        row = getWindowData(comp, coord = coord)
+        row = getWindowData(comp)
+    elif (comp['type'] == 'monitor'):
+        row = getMonitorData(comp)
     else:
         raise Exception('Unknown component type: {}'.format(comp['type']))
     return row
