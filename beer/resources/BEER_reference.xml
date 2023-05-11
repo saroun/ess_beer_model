@@ -357,7 +357,7 @@
 			</GUIDE>
 		</FRAME>
 		<FRAME class="GUIDE" id="GSW" name="bi-spectral switch">
-			<DIST name="distance" units="mm">521.0</DIST>
+			<DIST name="distance" units="mm">510.5</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
 			<SIZE name="dimensions" units="mm">22.5 65.0 15.1</SIZE>
@@ -387,17 +387,17 @@
 			</GUIDE>
 		</FRAME>
 		<FRAME class="GUIDE" id="GCA1" name="chopper guide A1">
-			<DIST name="distance" units="mm">35.0</DIST>
+			<DIST name="distance" units="mm">47.3</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 62.37 458.2</SIZE>
+			<SIZE name="dimensions" units="mm">20.0 62.37 466.4</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
 			<VEL name="velocity" units="m.s^-1">0.0 0.0 0.0</VEL>
 			<GUIDE>
 				<TYPE name="type" value="1">guide or bender</TYPE>
-				<EXIT name="exit window" units="mm">20.0 64.33</EXIT>
+				<EXIT name="exit window" units="mm">20.0 64.37</EXIT>
 				<RO name="curvature" units="m^-1">0.0 0.0</RO>
 				<N name="slits">1 1</N>
 				<DL name="lamella thickness" units="mm">1.0E-2 1.0E-2</DL>
@@ -417,10 +417,10 @@
 			</GUIDE>
 		</FRAME>
 		<FRAME class="DCHOPPER" id="PSC1" name="PS chopper 1">
-			<DIST name="distance" units="mm">483.2</DIST>
+			<DIST name="distance" units="mm">481.4</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">30.0 80.0 50.0</SIZE>
+			<SIZE name="dimensions" units="mm">30.0 80.0 20.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
@@ -441,10 +441,10 @@
 			</DCHOPPER>
 		</FRAME>
 		<FRAME class="GUIDE" id="GCA2" name="chopper guide A2">
-			<DIST name="distance" units="mm">25.0</DIST>
+			<DIST name="distance" units="mm">15.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 64.53 132.0</SIZE>
+			<SIZE name="dimensions" units="mm">20.0 64.49 142.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
@@ -471,10 +471,10 @@
 			</GUIDE>
 		</FRAME>
 		<FRAME class="DCHOPPER" id="PSC2" name="PS chopper 2">
-			<DIST name="distance" units="mm">375.0</DIST>
+			<DIST name="distance" units="mm">385.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">30.0 80.0 50.0</SIZE>
+			<SIZE name="dimensions" units="mm">30.0 80.0 20.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
@@ -498,14 +498,14 @@
 			<DIST name="distance" units="mm">43.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 66.17 457.0</SIZE>
+			<SIZE name="dimensions" units="mm">20.0 66.17 467.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
 			<VEL name="velocity" units="m.s^-1">0.0 0.0 0.0</VEL>
 			<GUIDE>
 				<TYPE name="type" value="1">guide or bender</TYPE>
-				<EXIT name="exit window" units="mm">20.0 67.82</EXIT>
+				<EXIT name="exit window" units="mm">20.0 67.85</EXIT>
 				<RO name="curvature" units="m^-1">0.0 0.0</RO>
 				<N name="slits">1 1</N>
 				<DL name="lamella thickness" units="mm">1.0E-2 1.0E-2</DL>
@@ -528,7 +528,7 @@
 			<DIST name="distance" units="mm">482.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">30.0 80.0 50.0</SIZE>
+			<SIZE name="dimensions" units="mm">30.0 80.0 20.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
@@ -549,17 +549,17 @@
 			</DCHOPPER>
 		</FRAME>
 		<FRAME class="GUIDE" id="GCC" name="chopper guide C">
-			<DIST name="distance" units="mm">25.0</DIST>
+			<DIST name="distance" units="mm">15.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 67.99 850.0</SIZE>
+			<SIZE name="dimensions" units="mm">20.0 67.96 878.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
 			<VEL name="velocity" units="m.s^-1">0.0 0.0 0.0</VEL>
 			<GUIDE>
 				<TYPE name="type" value="1">guide or bender</TYPE>
-				<EXIT name="exit window" units="mm">20.0 70.7</EXIT>
+				<EXIT name="exit window" units="mm">20.0 70.75</EXIT>
 				<RO name="curvature" units="m^-1">0.0 0.0</RO>
 				<N name="slits">1 1</N>
 				<DL name="lamella thickness" units="mm">1.0E-2 1.0E-2</DL>
@@ -579,10 +579,10 @@
 			</GUIDE>
 		</FRAME>
 		<FRAME class="DCHOPPER" id="FC1A" name="frame chopper 1A">
-			<DIST name="distance" units="mm">875.0</DIST>
+			<DIST name="distance" units="mm">893.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">30.0 80.0 50.0</SIZE>
+			<SIZE name="dimensions" units="mm">30.0 80.0 20.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
@@ -603,10 +603,10 @@
 			</DCHOPPER>
 		</FRAME>
 		<FRAME class="DCHOPPER" id="FC1B" name="frame chopper 1B">
-			<DIST name="distance" units="mm">50.0</DIST>
+			<DIST name="distance" units="mm">34.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">30.0 80.0 50.0</SIZE>
+			<SIZE name="dimensions" units="mm">30.0 80.0 20.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
@@ -627,17 +627,17 @@
 			</DCHOPPER>
 		</FRAME>
 		<FRAME class="GUIDE" id="GCE" name="chopper guide E">
-			<DIST name="distance" units="mm">25.0</DIST>
+			<DIST name="distance" units="mm">15.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 70.99 925.0</SIZE>
+			<SIZE name="dimensions" units="mm">20.0 70.94 953.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
 			<VEL name="velocity" units="m.s^-1">0.0 0.0 0.0</VEL>
 			<GUIDE>
 				<TYPE name="type" value="1">guide or bender</TYPE>
-				<EXIT name="exit window" units="mm">20.0 73.43</EXIT>
+				<EXIT name="exit window" units="mm">20.0 73.45</EXIT>
 				<RO name="curvature" units="m^-1">0.0 0.0</RO>
 				<N name="slits">1 1</N>
 				<DL name="lamella thickness" units="mm">1.0E-2 1.0E-2</DL>
@@ -657,10 +657,10 @@
 			</GUIDE>
 		</FRAME>
 		<FRAME class="DCHOPPER" id="MCA" name="modulation chopper A">
-			<DIST name="distance" units="mm">950.0</DIST>
+			<DIST name="distance" units="mm">968.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 80.0 50.0</SIZE>
+			<SIZE name="dimensions" units="mm">20.0 80.0 20.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
@@ -684,7 +684,7 @@
 			<DIST name="distance" units="mm">50.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 80.0 50.0</SIZE>
+			<SIZE name="dimensions" units="mm">20.0 80.0 20.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
@@ -705,17 +705,17 @@
 			</DCHOPPER>
 		</FRAME>
 		<FRAME class="GUIDE" id="GCF" name="chopper guide F">
-			<DIST name="distance" units="mm">25.0</DIST>
+			<DIST name="distance" units="mm">15.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 73.67 475.0</SIZE>
+			<SIZE name="dimensions" units="mm">20.0 73.64 495.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
 			<VEL name="velocity" units="m.s^-1">0.0 0.0 0.0</VEL>
 			<GUIDE>
 				<TYPE name="type" value="1">guide or bender</TYPE>
-				<EXIT name="exit window" units="mm">20.0 74.73</EXIT>
+				<EXIT name="exit window" units="mm">20.0 74.75</EXIT>
 				<RO name="curvature" units="m^-1">0.0 0.0</RO>
 				<N name="slits">1 1</N>
 				<DL name="lamella thickness" units="mm">1.0E-2 1.0E-2</DL>
@@ -735,10 +735,10 @@
 			</GUIDE>
 		</FRAME>
 		<FRAME class="DCHOPPER" id="MCC" name="modulation chopper C">
-			<DIST name="distance" units="mm">500.0</DIST>
+			<DIST name="distance" units="mm">510.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 80.0 50.0</SIZE>
+			<SIZE name="dimensions" units="mm">20.0 80.0 20.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
@@ -759,17 +759,17 @@
 			</DCHOPPER>
 		</FRAME>
 		<FRAME class="GUIDE" id="GCG" name="chopper guide G">
-			<DIST name="distance" units="mm">25.0</DIST>
+			<DIST name="distance" units="mm">15.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 74.83 86.0</SIZE>
+			<SIZE name="dimensions" units="mm">20.0 74.81 109.5</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
 			<VEL name="velocity" units="m.s^-1">0.0 0.0 0.0</VEL>
 			<GUIDE>
 				<TYPE name="type" value="1">guide or bender</TYPE>
-				<EXIT name="exit window" units="mm">20.0 75.01</EXIT>
+				<EXIT name="exit window" units="mm">20.0 75.04</EXIT>
 				<RO name="curvature" units="m^-1">0.0 0.0</RO>
 				<N name="slits">1 1</N>
 				<DL name="lamella thickness" units="mm">1.0E-2 1.0E-2</DL>
@@ -788,17 +788,52 @@
 				<LOGBNC name="log bounces" value="0">none</LOGBNC>
 			</GUIDE>
 		</FRAME>
-		<FRAME class="SGUIDE" id="GE1" name="bent guide, v-expanding">
-			<DIST name="distance" units="mm">100.0</DIST>
+		<FRAME class="SGUIDE" id="GE1A" name="guide, v-expanding">
+			<DIST name="distance" units="mm">110.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">20.0 75.04 4999.0</SIZE>
+			<SIZE name="dimensions" units="mm">20.0 75.04 1500.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
 			<VEL name="velocity" units="m.s^-1">0.0 0.0 0.0</VEL>
 			<SGUIDE>
-				<NSEG name="segments">10</NSEG>
+				<NSEG name="segments">3</NSEG>
+				<RHO name="curvature" units="m^-1">-5.0E-4 0.0</RHO>
+				<GAP name="gap" units="mm">0.2</GAP>
+				<WAV name="waviness" units="mrad">0.2</WAV>
+				<MISALIGN name="misalignment" units="mm">2.0E-2 2.0E-2</MISALIGN>
+				<ACTIVE name="active">1 1 1 1</ACTIVE>
+				<SMOOTH name="smooth">0 0 0 0</SMOOTH>
+				<MONITOR name="monitor">0 0 0 0</MONITOR>
+				<REF0 name="r_0" units=" ">0.0</REF0>
+				<REFM name="r_m" units=" ">0.0</REFM>
+				<REFW name="width" units="Ni_nat">0.0</REFW>
+				<PROFH name="horizontal" value="1">flat</PROFH>
+				<PROFV name="vertical" value="0">manual</PROFV>
+				<EXIT name="exit window" units="mm">20.0 77.61</EXIT>
+				<CLOSED name="closed" value="0">no</CLOSED>
+				<FRONTMASK name="front mask" value="1">yes</FRONTMASK>
+				<GAPABS name="absorbing gaps" value="1">yes</GAPABS>
+				<LOGBNC name="log bounces" value="0">none</LOGBNC>
+				<SEG name="segments parameters" rows="3">
+					<ITEM>20.0 76.01 499.9 3.0 2.5 3.0 3.0</ITEM>
+					<ITEM>20.0 76.86 499.8 3.0 2.5 3.0 3.0</ITEM>
+					<ITEM>20.0 77.61 499.9 3.0 2.5 3.0 3.0</ITEM>
+				</SEG>
+			</SGUIDE>
+		</FRAME>
+		<FRAME class="SGUIDE" id="GE1B" name="bent guide, v-expanding">
+			<DIST name="distance" units="mm">1529.0</DIST>
+			<SHAPE name="shape" value="3">box</SHAPE>
+			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
+			<SIZE name="dimensions" units="mm">20.0 77.65 3471.0</SIZE>
+			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
+			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
+			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
+			<VEL name="velocity" units="m.s^-1">0.0 0.0 0.0</VEL>
+			<SGUIDE>
+				<NSEG name="segments">7</NSEG>
 				<RHO name="curvature" units="m^-1">-5.0E-4 0.0</RHO>
 				<GAP name="gap" units="mm">0.2</GAP>
 				<WAV name="waviness" units="mrad">0.2</WAV>
@@ -816,22 +851,19 @@
 				<FRONTMASK name="front mask" value="1">yes</FRONTMASK>
 				<GAPABS name="absorbing gaps" value="1">yes</GAPABS>
 				<LOGBNC name="log bounces" value="0">none</LOGBNC>
-				<SEG name="segments parameters" rows="10">
-					<ITEM>20.0 76.01 499.9 3.0 2.5 3.0 3.0</ITEM>
-					<ITEM>20.0 76.86 499.8 3.0 2.5 3.0 3.0</ITEM>
-					<ITEM>20.0 77.61 499.8 3.0 2.5 3.0 3.0</ITEM>
-					<ITEM>20.0 78.25 499.8 3.0 2.5 3.0 3.0</ITEM>
-					<ITEM>20.0 78.79 499.8 3.0 2.5 3.0 3.0</ITEM>
-					<ITEM>20.0 79.23 499.8 3.0 2.5 3.0 3.0</ITEM>
-					<ITEM>20.0 79.57 499.8 3.0 2.5 3.0 3.0</ITEM>
-					<ITEM>20.0 79.81 499.8 3.0 2.5 3.0 3.0</ITEM>
-					<ITEM>20.0 79.95 499.8 3.0 2.5 3.0 3.0</ITEM>
-					<ITEM>20.0 80.0 498.9 3.0 2.5 3.0 3.0</ITEM>
+				<SEG name="segments parameters" rows="7">
+					<ITEM>20.0 78.28 499.9 3.0 2.5 3.0 3.0</ITEM>
+					<ITEM>20.0 78.82 499.8 3.0 2.5 3.0 3.0</ITEM>
+					<ITEM>20.0 79.25 499.8 3.0 2.5 3.0 3.0</ITEM>
+					<ITEM>20.0 79.58 499.8 3.0 2.5 3.0 3.0</ITEM>
+					<ITEM>20.0 79.82 499.8 3.0 2.5 3.0 3.0</ITEM>
+					<ITEM>20.0 79.96 499.8 3.0 2.5 3.0 3.0</ITEM>
+					<ITEM>20.0 80.0 470.9 3.0 2.5 3.0 3.0</ITEM>
 				</SEG>
 			</SGUIDE>
 		</FRAME>
 		<FRAME class="SGUIDE" id="GN1" name="bent guide, in bunker">
-			<DIST name="distance" units="mm">5000.0</DIST>
+			<DIST name="distance" units="mm">3471.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
 			<SIZE name="dimensions" units="mm">20.0 80.0 9499.0</SIZE>
@@ -1112,7 +1144,7 @@
 			<DIST name="distance" units="mm">4.09737E4</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">50.0 85.0 50.0</SIZE>
+			<SIZE name="dimensions" units="mm">50.0 85.0 20.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>
@@ -1136,7 +1168,7 @@
 			<DIST name="distance" units="mm">50.0</DIST>
 			<SHAPE name="shape" value="3">box</SHAPE>
 			<ORDER name="stage-gonio order" value="0">gonio on stage</ORDER>
-			<SIZE name="dimensions" units="mm">50.0 85.0 50.0</SIZE>
+			<SIZE name="dimensions" units="mm">50.0 85.0 20.0</SIZE>
 			<AX name="axis" units="deg">0.0 0.0 0.0</AX>
 			<STA name="stage" units="mm">0.0 0.0 0.0</STA>
 			<GON name="gonio" units="deg">0.0 0.0 0.0</GON>

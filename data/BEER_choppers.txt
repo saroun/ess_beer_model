@@ -1,0 +1,51 @@
+
+
+Reference mode [5], PS2
+Medium resolution, pulse shaping, PSC, medium resolution, single frame
+Chopper settings (cmode=2, wmode=1, lambda=2.1):
+PSC1: dist=6.45, frq=168, phi=0.2, phase=0.393049
+PSC2: dist=6.85, frq=-168, phi=0.2, phase=-0.793049
+FC1A: dist=8.283, frq=28, phi=0.0166667, phase=0.106447
+FC2A: dist=79.975, frq=14, phi=0, phase=0.594349
+
+
+Reference mode [10], M3
+High resolution, modulation, MC, high resolution, single frame
+Chopper settings (cmode=6, wmode=1, lambda=2.1):
+MCA: dist=9.3, frq=280, phi=0, phase=1.38229
+FC1A: dist=8.283, frq=28, phi=0.0166667, phase=0.106447
+FC2A: dist=79.975, frq=14, phi=0, phase=0.594349
+
+
+Reference mode [13], SANS
+White beam, full pulse, single frame
+Chopper settings (cmode=0, wmode=1, lambda=6):
+FC1A: dist=8.283, frq=28, phi=-0.00833333, phase=0.360086
+FC2A: dist=79.975, frq=14, phi=0, phase=1.69814
+
+
+Reference mode [14], DS0
+diffraction + SANS, modulation, MC, SANS mode, pulse suppression, double frame
+Chopper settings (cmode=7, wmode=2, lambda=4):
+MCC: dist=9.875, frq=70, phi=-0.25, phase=0.948932
+FC1A: dist=8.283, frq=7, phi=0.0333333, phase=0.025292
+FC2A: dist=79.975, frq=7, phi=0, phase=0.566047
+
+
+Reference mode [15], DS1
+diffraction + SANS, pulse shaping, PSC, high flux, alternating frames
+Chopper settings (cmode=1, wmode=3, lambda=2.1):
+PSC1: dist=6.45, frq=168, phi=0.2, phase=0.416458
+PSC3: dist=7.375, frq=-168, phi=0.2, phase=-0.816458
+FC1A: dist=8.283, frq=14, phi=-0.025, phase=0.0865567
+FC1B: dist=8.317, frq=63, phi=0, phase=0.278142
+FC2B: dist=80.025, frq=7, phi=0, phase=0.29736
+
+
+Reference mode [16], M4
+High resolution, modulation x 4, MC, AB mode, single frame
+Chopper settings (cmode=8, wmode=1, lambda=2.1):
+MCA: dist=9.3, frq=140, phi=0, phase=0.691147
+MCB: dist=9.35, frq=280, phi=0, phase=1.38973
+FC1A: dist=8.283, frq=28, phi=0.0166667, phase=0.106447
+FC2A: dist=79.975, frq=14, phi=0, phase=0.594349

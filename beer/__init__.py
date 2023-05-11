@@ -61,7 +61,7 @@ def reportChoppers(outdir=''):
     # Plot chopper characteristics for selected reference modes
     import beer.modes as BMOD 
     import os
-    modes = [5, 10, 13, 14, 15]
+    modes = [5, 10, 13, 14, 15, 16]
     fdir = os.path.normpath(outdir)
     fout = os.path.join(fdir,'BEER_choppers.txt')
     out = ''

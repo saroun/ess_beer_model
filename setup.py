@@ -19,7 +19,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='beer',
-    version='1.6.0',
+    version='1.9.0',
     description='Neutron optics model for the diffractometer BEER at ESS',
     long_description = long_description,
     long_description_content_type='text/markdown',
@@ -33,7 +33,7 @@ setup(
     ],
     platforms=['any'],
     keywords='ESS, BEER, neutron', 
-    python_requires='>=3.6',
+    python_requires='>=3.8',
     install_requires=['numpy', 'matplotlib'],
     packages=['beer'],
     package_data={'beer': beer_data}, 

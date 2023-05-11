@@ -285,7 +285,7 @@ def cfgChopper(key, key0=None):
     comp = BC.BEER[key]
     if not comp or not comp['type'] == 'chopper':
         raise Exception('Wrong component type for cfgChopper')
-    ID = comp['id']
+    ID = comp['key']
 #    L0 = getPreviousDistance(key0)
 #    L = comp['start'] - L0 + 0.5*comp['thickness']   
     L = getRelDistance(key0, key)
@@ -296,6 +296,7 @@ def cfgChopper(key, key0=None):
     tt = cfgChopperTiming(key)
     out ='# '+ID+'\n'
     out += 'SET {} DIST {:.1f}\n'.format(ID, L)
+    out += 'SET {} SIZE(3) 20\n'.format(ID) 
     out += 'SET {} NWIN {:d}\n'.format(ID,len(wins))
     out += 'SET {} WIN {:.5g}\n'.format(ID, wmin/360)
     out += 'SET {} TIMING {}\n'.format(ID, tt)
@@ -336,8 +337,10 @@ def cfgChopperSection():
 
 def cfgBunkerSection():
     out = sectionHeader('Bunker section')
-    out += cfgSGUIDE('GE1', seg = 500., key0='GCG')
-    out += cfgSGUIDE('GN1', seg = 500., key0='GE1')
+    # out += cfgSGUIDE('GE1', seg = 500., key0='GCG')
+    out += cfgSGUIDE('GE1A', seg = 500., key0='GCG')
+    out += cfgSGUIDE('GE1B', seg = 500., key0='GE1A')
+    out += cfgSGUIDE('GN1', seg = 500., key0='GE1B')
     out += cfgSGUIDE('GN2', seg = 500., key0='GN1')
     out += cfgGUIDE('GSH2', key0='GN2')
     out += '\n'

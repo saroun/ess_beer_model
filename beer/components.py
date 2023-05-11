@@ -26,13 +26,16 @@ update 2022-10-14: revision 1.7
     Updated PSC1-PSC2 sector according to the design (no movable guides)
     Bug fix - remove smoothness of guides TG1, TG2 
 update 2023-01-18: revision 1.8
-    Added gaps for beam monitors. GSW and BM1 outside vacuum housing.
+    Added gaps for beam monitors. GSW and BM1 outside vacuum housing.  
+update 2023-05-11: revision 1.9
+    Updated monitor BM2 position - moved behind chopper housing.
+    
 """
 
 import beer.geometry as B
 import datetime
 import numpy as np
-VERSION = '1.8'
+VERSION = '1.9'
 DATE = datetime.datetime.now().strftime("%B %d, %Y, %H:%M:%S")
 
 #%% Define global data
@@ -269,7 +272,7 @@ def monitor(name, distance, desc, thickness=19, size=None):
     name: str
         component ID
     distance: float
-        distance to the centre
+        distance to the up-stream surface
     desc: str
         description text
     thickness: float
@@ -280,8 +283,8 @@ def monitor(name, distance, desc, thickness=19, size=None):
     el = {}
     el['id'] = name
     el['dist'] = distance
-    el['start'] = distance-0.5*thickness
-    el['end'] = distance+0.5*thickness
+    el['start'] = distance
+    el['end'] = distance+thickness
     el['desc'] = desc
     el['type'] = 'monitor'
     el['thickness']=thickness
@@ -342,13 +345,13 @@ def getEllStr(E):
     out = fmt.format(E['a'], E['b'], E['c'])
     return out
 
-def getChopperGuide(num, start, end):
+def getChopperGuide(num, start, end, substr='Al'):
     """
     Special descriptor for short guides in chopper section
     """
     stre = 'flat expanding, on ellipse '+getEllStr(B.E1)
     g = guide(num, start, end,'chopper guide element', 
-              m=[4., 4., 3., 3.], gv=stre, substr='Cu')
+              m=[4., 4., 3., 3.], gv=stre, substr=substr)
     return g
 
 
@@ -409,29 +412,31 @@ def defineComponents():
     BEER['W2'] = window('W2', bbg_win1, thickness=0.5)
     BEER['BBG'] =  guide(2,  bbg_start, bbg_end, 'bridge beam guide',
         m=[2.5, 2.5, 4., 4.], gv='flat expanding, on ellipse '+getEllStr(B.E1), 
-        substr='Cu')
+        substr='Al')
     BEER['W3'] = window('W3', bbg_win2, thickness=0.5)
     # bi-spectral switch, assumed to be outside the 1st guide and chopper housing
     BEER['GSW'] =  switch(3, 5921.30, m=[3., 3., 0., 0.])
         
     
     # BM1 monitor position
-    BM1_dist = 5953.8
+    BM1_dist = 5944.3
     BM1_len = 19
     BM1_gap = 3    
     
-    BEER['BM1'] = monitor('BM1', BM1_dist,'', thickness=BM1_len)
+    BEER['BM1'] = monitor('BM1', BM1_dist,
+                          'Dimensions unclear; currently h:55; w:55,86', 
+                          thickness=BM1_len)
     
     # window after bi-spectral switch, 0.5 mm
     # start of the 1st chopper housing
-    BEER['W4'] = window('W4', BM1_dist+0.5*BM1_len+BM1_gap)        
+    BEER['W4'] = window('W4', BM1_dist+BM1_len+BM1_gap)        
     PSC1_dist = 6450
     PSC2_dist = 6850
     PSC2_width = 62 # width of the PSC2 housing 
     gap12 = 210 # air gap between PSC1, PSC2 in the most distant position 
     # format chopper guide section: 
     BEER['GCA1'] =  getChopperGuide('4-01',BEER['W4']['end']+1.8, PSC1_dist-15)
-    BEER['PSC1'] = chopper('PSC1',PSC1_dist, desc='pulse shaping')
+    BEER['PSC1'] = chopper('PSC-101',PSC1_dist, desc='pulse shaping')
     BEER['GCA2'] =  getChopperGuide('4-02', PSC1_dist+15, 
                                     PSC2_dist-0.5*PSC2_width-gap12-gw)
     BEER['W5'] = window('W5', BEER['GCA2']['end']+go)
@@ -439,7 +444,7 @@ def defineComponents():
     # start of the PSC2 movable housing
     BEER['W6'] = window('W6', BEER['W5']['end'] + gap12)
 #    BEER['GCA3'] =  getChopperGuide('4-03', BEER['W6']['end']+go, PSC2_dist-gcg)
-    BEER['PSC2'] = chopper('PSC2',PSC2_dist, desc='pulse shaping, variable distance 6650 to 6850')
+    BEER['PSC2'] = chopper('PSC-201',PSC2_dist, desc='pulse shaping, variable distance 6650 to 6850')
 #    BEER['GCA4'] =  getChopperGuide('4-04', PSC2_dist+0.5*PSC2_widthgcg, PSC2_dist+0.5*PSC2_width-gw)
     BEER['W7'] = window('W7', PSC2_dist + 0.5*PSC2_width-w)
     # end of the PSC2 movable housing
@@ -452,47 +457,49 @@ def defineComponents():
     # start of the main chopper housing
     BEER['W8'] = window('W8', BEER['W7']['end']+10)
     BEER['GCB'] =  getChopperGuide(5, BEER['W8']['end']+go, PSC3_dist-15.0)
-    BEER['PSC3'] = chopper('PSC3',PSC3_dist, 'pulse shaping', status=False)
+    BEER['PSC3'] = chopper('PSC-301',PSC3_dist, 'pulse shaping', status=False)
     BEER['GCC'] =  getChopperGuide(6, PSC3_dist+15.0, FC1_dist-0.5*34.0-15.0)
-    BEER['FC1A'] = chopper('FC1A',FC1_dist-0.5*34.0, fmax=28, win=72, desc='WFD')
-    BEER['FC1B'] = chopper('FC1B',FC1_dist+0.5*34.0, fmax=70, win=180, desc='WFD', status=False)
+    BEER['FC1A'] = chopper('FOC-101',FC1_dist-0.5*34.0, fmax=28, win=72, desc='WFD')
+    BEER['FC1B'] = chopper('FOC-102',FC1_dist+0.5*34.0, fmax=70, win=180, desc='WFD', status=False)
     BEER['GCE'] =  getChopperGuide(7, FC1_dist+0.5*34.0+15.0, MCA_dist-15.0)
     wctr = []
     for i in range(8):
         wctr.append(i*360/8)
-    BEER['MCA'] =  chopper('MCA',MCA_dist, fmax=280, win='8 x 5', wctr=wctr, desc='modulation')
+    BEER['MCA'] =  chopper('MC-101',MCA_dist, fmax=280, win='8 x 5', wctr=wctr, desc='modulation')
     wctr = []
     for i in range(16):
         wctr.append(i*360/16)
-    BEER['MCB'] =  chopper('MCB',MCB_dist, fmax=280, win='16 x 5', wctr=wctr, desc='modulation', status=False)
+    BEER['MCB'] =  chopper('MC-102',MCB_dist, fmax=280, win='16 x 5', wctr=wctr, desc='modulation', status=False)
     BEER['GCF'] =  getChopperGuide(8, MCB_dist+15.0, MCC_dist-15.0)
     wctr = [0]
     for i in range(7):
         wctr.append(90+(i+1)*180/8)
-    BEER['MCC'] =  chopper('MCC',MCC_dist, fmax=280, win='180 + 7 x 5', wctr=wctr, desc='modulation', status=False)
+    BEER['MCC'] =  chopper('MC-200',MCC_dist, fmax=280, win='180 + 7 x 5', wctr=wctr, desc='modulation', status=False)
     BEER['GCG'] =  getChopperGuide(9, MCC_dist+15, B.curve1_begin-0.5)
     
     # Start of the curved guide, vertical elliptic expansion
     # BM2 monitor position
-    BM2_dist = 10315
+    BM2_dist = 11505
     BM2_len = 19
     BM2_gap = 3
     # 1st segment of the curved expanding guide before BM2 monitor
-    BEER['GE1s'] =  guide(9, B.curve1_begin, 
-                                    BM2_dist-0.5*BM2_len-BM2_gap-gw, 
-        'NOTE: 1st segment of the bent guide', m=[3., 2.5, 3., 3.], 
-        RH=1e-6/B.curve1, gv=B.E1, substr='Cu'
+    BEER['GE1A'] =  guide("10-01", B.curve1_begin, 
+                                    BM2_dist-BM2_gap-gw, 
+        'NOTE: bent & vertically expanding !', m=[3., 2.5, 3., 3.], 
+        RH=1e-6/B.curve1, gv=B.E1, substr='Al'
                                     )
-    BEER['W9'] = window('W9', BEER['GE1s']['end']+go)
+    BEER['W9'] = window('W9', BEER['GE1A']['end']+go)
     # end of the main chopper housing    
     
-    BEER['BM2'] = monitor('BM2', BM2_dist,'', thickness=BM2_len)
+    BEER['BM2'] = monitor('BM2', BM2_dist,
+                          'Dimensions unclear; currently h:55; w:55,86', 
+                          thickness=BM2_len)
     
     # start of the GE1+GN1 housing
-    BEER['W10'] = window('W10', BM2_dist+0.5*BM2_len+BM2_gap)
-    BEER['GE1'] =  guide(10, BEER['W10']['end']+go, B.E1['c'], 
+    BEER['W10'] = window('W10', BM2_dist+BM2_len+BM2_gap)
+    BEER['GE1B'] =  guide("10-02", BEER['W10']['end']+go, B.E1['c'], 
         'NOTE: bent & vertically expanding !', m=[3., 2.5, 3., 3.], 
-        RH=1e-6/B.curve1, gv=B.E1, substr='Cu')
+        RH=1e-6/B.curve1, gv=B.E1, substr='Al')
     
     # bunker wall throughput:
     wall_in=24500.0 # start of the bunker wall insert optics
@@ -500,7 +507,7 @@ def defineComponents():
     
     # Curved guide, parallel, inside bunker
     BEER['GN1'] =  guide(11, B.E1['c'], wall_in-g,' ', 
-        m=[3., 2.5, 2., 2.], RH=1e-6/B.curve1, substr='Cu')
+        m=[3., 2.5, 2., 2.], RH=1e-6/B.curve1, substr='Al')
     # Curved guide, parallel,  bunker wall insert
     BEER['GN2'] =  guide(12, wall_in, wall_out, 
         'bunker wall insert', m=[3., 2.5, 2., 2.], RH=1e-6/B.curve1, substr='Cu')
@@ -526,9 +533,9 @@ def defineComponents():
     # 0.5 mm Al window + 2.5 mm gap + 5 mm B4C mask at the entry
     BEER['W14'] = window('W14', shutter_insert_window)
     # update ver. 1.5, adding straight element
-    BEER['GE2AS'] =  guide(14, shutter_insert_start , B.E2_start-g, 
+    BEER['GE2AS'] =  guide('14-01', shutter_insert_start , B.E2_start-g, 
         'shutter pit insert, parallel', m=[2.5, 2.5, 2., 2.], substr='Cu')
-    BEER['GE2A'] =  guide(14, B.E2_start , shutter_insert_end, 
+    BEER['GE2A'] =  guide('14-02', B.E2_start , shutter_insert_end, 
         'shutter pit insert, elliptic', m=[2.5, 2.5, 2., 2.], gh=B.E2, substr='Cu')
     BEER['GE2B'] =  guide(15, shutter_wall_end, B.curve2_begin-2.3, 
         ' ', m=[2.5, 2.5, 2., 2.], gh=B.E2)
@@ -574,7 +581,7 @@ def defineComponents():
     # Input slit
     
     BEER['SL3'] =  slit('SL3', sample_dist-50, 
-        'Sample input slit, adjustable distance and size',
+        'Sample input slit, adjustable distance and size', thickness=4.0,
         size=[10., 20.])
        
     # store key as the component property:
@@ -828,7 +835,7 @@ def getSampleData(dist, coord = 'FP'):
     rec['comment'] = com
     return rec
 
-def getWindowData(comp):
+def getWindowData(comp, use_id=False):
     """Return hash map with strings for component row cells
     """        
     dist =  comp['start']
@@ -836,7 +843,8 @@ def getWindowData(comp):
     L = comp['thickness']   
     com = comp['desc']    
     rec = createRec(dist, comp['type'])
-    rec['ID'] = comp['id']
+    if use_id:
+        rec['ID'] = comp['id']
     rec['end'] = '{:.1f}'.format(end)
     rec['length'] = '{:.1f}'.format(L)
     rec['comment'] = com
@@ -976,7 +984,7 @@ def writeComponents(coord = 'ISCS', file = '', gaps=False):
         if (comp['type'] == 'window'):
             air = not(air)
     if (gaps):
-        gap = getGapData(BEER['SL3']['end'], sample_dist,typ='air') 
+        gap = getGapData(BEER['SL3']['end'], sample_dist, typ='air') 
         ln = formatCells(fmt, gap)
         out += ln
     row = getSampleData(sample_dist, coord = coord)
