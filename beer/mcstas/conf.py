@@ -1033,6 +1033,13 @@ def compPosition(ID,relto='ISCS'):
     out += fmt.format(ID, relto)
     return out
 
+def compPositionDispl(ID,relto='ISCS'):
+    fmt = 'AT ({}.shift + misfit_h*randnorm(), misfit_v*randnorm(), {}.dist) RELATIVE {}\n'
+    out = fmt.format(ID, ID, relto)
+    fmt = 'ROTATED (0, {}.angle, 0) RELATIVE {}\n'
+    out += fmt.format(ID, relto)
+    return out
+
 def compMonitor(info, relto='ISCS'):
     """
      Place simple monitor after given component
@@ -1096,7 +1103,7 @@ def compGuide(info, relto='ISCS'):
     fmt = 'mleft = @C.mL, mright = @C.mR, mtop = @C.mT, mbottom = @C.mB\n'.replace('@C',ID)
     out += tab+fmt.replace('@C',ID)
     out += ')\n'
-    out += compPosition(ID,relto=relto)
+    out += compPositionDispl(ID,relto=relto)
     return out
 
         
@@ -1210,8 +1217,12 @@ def compGuideSegment(info, iseg, seginfo):
     fmt = 'mleft = {}, mright = {}, mtop = {}, mbottom = {}\n'
     out += tab+fmt.format(*m4)
     out += ')\n'
-    fmt = 'AT (0, 0, {:.5g}) RELATIVE PREVIOUS\n'
+    #fmt = 'AT (0, 0, {:.5g}) RELATIVE PREVIOUS\n'
+    #out += fmt.format(dist)
+    fmt = 'AT (misfit_h*randnorm(), misfit_v*randnorm(), {:.5g}) RELATIVE PREVIOUS\n'
     out += fmt.format(dist)
+    
+# TODO add misalignment variable    
     fmt = 'ROTATED (0, {:.5g}, 0) RELATIVE PREVIOUS\n'
     out += fmt.format(angle)
     return out

@@ -47,7 +47,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT @NAME(int mode=0, lambda=0, int verbose=0, int npulse=0)
+DEFINE INSTRUMENT @NAME(int mode=0, lambda=0, int verbose=0, int npulse=0, misfit_h=2e-5, misfit_v=2e-5)
 
 DECLARE
 
@@ -431,6 +431,7 @@ TStat stats[MAXCOMP]; // records transport statistics for components
 double beam_z[MAXMON], beam_sum[MAXMON]; // records distance-intensity function
 int nComponents = 0; 
 int nMonitors = 0; 
+
 
    
 // counter of neutrons emitted by the source  (can be used for statistics)  
@@ -869,7 +870,7 @@ End of components definition
 
 
 /* Define monitor ranges, optimized for full beam at the sample  */
-    double mgn=0.05; // margin for wavelength and time
+    double mgn=0.0; // margin for wavelength and time
 	mwidth=0.06; // [m]
 	mheight=0.06; // [m]
 	mtof1=Lsample*(1.0/vmax-mgn*(1.0/vmin-1.0/vmin)); // minimum ToF [s]
@@ -963,7 +964,7 @@ COMPONENT TWidth = Monitor_nD(filename = "TWidth.dat", xwidth=mwidth, yheight=mh
 /* Monitor beam characteristics */
 
 COMPONENT Lmon = L_monitor(
-    nL = 160, filename = "Lmon.dat", xwidth = mwidth, yheight = mheight,
+    nL = 100, filename = "Lmon.dat", xwidth = mwidth, yheight = mheight,
     Lmin = mlam1, Lmax = mlam2, restore_neutron = 1)
   AT (0, 0, 0) RELATIVE Sample_axis
 

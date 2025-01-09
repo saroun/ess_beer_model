@@ -609,10 +609,10 @@ def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True, grid=None):
         """Consolidate x-label text."""
         xsc = xscale
         xlbl = d.xlabel
-        q = xlbl.find('[\gms]')
+        q = xlbl.find(r'[\gms]')
         # convert microsec. to ms
         if q>0:
-            xlbl = xlbl.replace('[\gms]','[ms]')
+            xlbl = xlbl.replace(r'[\gms]','[ms]')
             xsc=0.001
         # convert other special characters to LaTeX math format
         xlbl = replChar(xlbl)

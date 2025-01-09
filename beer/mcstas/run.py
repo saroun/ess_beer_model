@@ -564,7 +564,7 @@ def verifyMcStas(verbose=1):
 
 
 def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600, 
-                  outdir=None, quiet=False):
+                  outdir=None, quiet=False, **kwargs):
     """
     Run McStas simulation with given parameters. Optinally plot results.
     
@@ -626,9 +626,12 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
     smode = 'mode={:d}'.format(imode)
     snpls = 'npulse={:d}'.format(npulse)
     sv = 'verbose={:d}'.format(int(max(0,verbose)))
-    ename = os.path.join('.',config['EXE'])
-    cmd = [ename,'-n', sn, smode, sv, snpls,'-d', respath]
     
+    ename = os.path.join('.',config['EXE'])
+    cmd = [ename,'-n', sn, smode, sv, snpls]
+    for key in kwargs:
+        cmd += ['{}={}'.format(key, kwargs[key])]
+    cmd += ['-d', respath]
     # clean output path if exists
     if os.path.exists(outname):
         shutil.rmtree(outname)
@@ -675,7 +678,7 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
     return res                            
 
 
-def runModes(modes=[], counts=1e6, timeout=3600):
+def runModes(modes=[], counts=1e6, timeout=3600, **kwargs):
     
     """
     Run simulations for selected BEER reference modes.
@@ -723,7 +726,7 @@ def runModes(modes=[], counts=1e6, timeout=3600):
         if (imode>=0):
             try:
                 res = res and runSimulation(sm[0], n=counts, npulse=npls, 
-                                  timeout=timeout, outdir=m, quiet=True)
+                                  timeout=timeout, outdir=m, quiet=True, **kwargs)
             except Exception as e:
                 print(e)
     return res 
