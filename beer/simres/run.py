@@ -34,7 +34,7 @@ else:
 
 # Keep SIMRES project data as global variables
 # Must be defined by user calling setConfig() before running SIMRES
-_SIMRES_JAVA = 'java'
+_SIMRES_JAVA = os.environ['JRE']
 _SIMRES_WORKPATH = ''
 _SIMRES_CFG_FILE = 'BEER_reference.xml'
 _SIMRES_CFG_DIR = ''
@@ -552,7 +552,8 @@ def verifyJava(verbose=1):
     Verify that java can be started.
     """
     config = getConfig()
-    cmd = [config['JAVA'], '-version']
+    java = '"{}"'.format(config['JAVA'])
+    cmd = [java, '-version']
     out = None
     res = False
     try:
@@ -631,7 +632,8 @@ def runScript(config=None, script='BEER_setup.inp', log='',
         raise Exception('Script {} does not exist.'.format(scrfull))
 
     # compose command
-    cmd = [config['JAVA'], '-jar', '"'+sim['jar']+'"']
+    java = '"{}"'.format(config['JAVA'])
+    cmd = [java, '-jar', '"'+sim['jar']+'"']
     # options
     cmd.extend(['-g', '"'+sim['GUI']+'"']) # path to GUI directory
     cmd.extend(['-p', config['PRJFILE']]) # project config. file name

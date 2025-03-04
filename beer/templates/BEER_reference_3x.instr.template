@@ -7,9 +7,9 @@
 * Written by: Jan Saroun (saroun@ujf.cas.cz)
 * Date: 15/2/2017
 * Origin: Nuclear Physics Institute, CAS, Rez
-* Release: McStas 3.5.1
-* Version: 1.9
-* Updated: 2025-02-18
+* Release: McStas
+* Version: 1.4
+* Updated: 9/6/2020
 * %INSTRUMENT_SITE: ESS
 *
 * Diffractometer BEER, primary part, butterfly moderator
@@ -415,7 +415,6 @@ double pixel_angle(double x, double y, double LD, double tth) {
 	double res = atan2(sqrt(x1*x1+y*y), z1);
 	return res;
 }
-
 /* --------------------------------------------------
 Automatically generated code - reference modes
 -----------------------------------------------------*/
@@ -445,7 +444,6 @@ int nMonitors = 0;
    
 // counter of neutrons emitted by the source  (can be used for statistics)  
 long srccount;
-#pragma acc declare create(srccount)
  
 /* Add a component to count statistics */ 
 void addComponent(char *id, int idx) {
@@ -549,13 +547,11 @@ They are defined by mode setting,  see setMode()
    double Lchopper; 
 // Exchanger switcch on/off   
    int GF3On;
-#pragma acc declare create(GF3On)
 
 // nominal ToF values to the pulse chopper (t0) sample and detector (set for given lambda)
    double tof_t0, tof_sample, tof_det;
 // source time focusing data
    double foc_time, foc_dist, foc_dt;
-#pragma acc declare create(foc_pls)
    int foc_pls;
 // d-range for given tth (take-off angle), detector span and wavelength range
    double d_min, d_max;
@@ -563,8 +559,8 @@ They are defined by mode setting,  see setMode()
 // radial collimator parameters, set in setCollimator()  
    double col_h1, col_h2; // entry and exit heights
    double col_rad; // radius (entry distance)
-   #pragma acc declare create(Rad2On)
    int Rad2On; // Radial collimator on/off   
+   
 // other auxilliary variables
    char options1[256];
    
@@ -593,7 +589,6 @@ Allowed widths are 0.5, 1, 2, 3, 4 mm
             col_rad=cold[2];
             Rad2On=0;
         }
-        #pragma acc update device(Rad2On)
         // calculate height (add max. sample height 2 cm)
         col_h1=0.02+2*col_rad*tan(col_angv*DEG2RAD/2);
         col_h2=0.02+2*(col_rad+col_len)*tan(col_angv*DEG2RAD/2);
@@ -654,7 +649,6 @@ lam0 = nominal wavelength for chopper phase calculation
         SL2.h = mod_S2_h[m]*0.001;
         SL3.h = mod_S3_h[m]*0.001;
         GF3On = mod_GF3[m];
-#pragma acc update device(GF3On)
 
         // movable PSC2 with fixed GCA3 and GCA4
         //double d1 = PSC2.dist - GCA3.dist;
@@ -742,8 +736,7 @@ lam0 = nominal wavelength for chopper phase calculation
 
         // Set radial collimator
         // only used by secondary spectrometer, if defined
-        setCollimator(colw);
-#pragma acc update device(foc_pls)
+        setCollimator(colw); 
     };
    
 /* reporting functions */   
@@ -832,9 +825,9 @@ dbgn=0;
 // calculate theta and d-range 
     double thmin, thmax;
 	// detector span [deg]
+						 
 	double ah = atan2(0.5*det_x,Ldet)/DEG2RAD;  // horizontal
     double av = atan2(0.5*det_y,Ldet)/DEG2RAD;  // vertical
-	
 	// minimum scattering angle
 	if (tth-ah <= 0.0) {
 		thmin = 0.0;
@@ -848,19 +841,23 @@ dbgn=0;
 		thmax = 0.5*pixel_angle(0.5*det_x, 0.0, Ldet, tth*DEG2RAD);
 	} else if (tth+ah < 180.0) {
 		thmax = 0.5*pixel_angle(0.5*det_x, 0.5*det_y, Ldet, tth*DEG2RAD);
+		  
+						
+   
 	} else {
 		thmax = 0.499*PI;
 	}
 	
 	// range of dhkl (for pattern calculation)
 	d_min = 0.5*(lambda-0.5*lamT)/sin(thmax);
+			   
 	d_max = fmin(0.5*(lambda+0.5*lamT)/sin(thmin),10.0);
+		 
 	printf("Bragg angle span [deg]: %g, %g \n", thmin/DEG2RAD, thmax/DEG2RAD);
 	printf("dhkl span [A]: %g, %g \n", d_min, d_max);
 	
 // clear source counter	
 	srccount = 0;
-#pragma acc update device(srccount)
 
 /*  START OF INSTRUMENT GEOMETRY */	 
 
@@ -921,8 +918,8 @@ Automatically generated code - setup report
 /* -------------------------------------------------
 End of setup report
 ---------------------------------------------------*/
-	    printf("\nPulse chopper at %g [m]\n",Lchopper);
-		printf("\nToF length [m]: %g \n",Lsample-Lchopper);
+		printf("\nPulse chopper at %g [m]\n",Lchopper);
+        printf("\nToF length [m]: %g \n",Lsample-Lchopper);
 	}
 	// printf("Time focusing: dist=%g, time=%g, width=%g\n",foc_dist, foc_time, foc_dt);
     if (GF3On) {
@@ -949,7 +946,6 @@ ROTATED (0 ,0 ,0) RELATIVE Origin
 EXTEND
 %{ 
  SrcX=x;SrcY=y;SrcZ=z;
- #pragma acc atomic
  srccount = srccount + 1;
  t -= t_offset;
 %}
@@ -962,7 +958,6 @@ AT (0, 0, 0) RELATIVE Origin
 EXTEND
 %{ 
  SrcX=x;SrcY=y;SrcZ=z;
- #pragma acc atomic
  srccount = srccount + 1;
  t -= t_offset - foc_pls/14.0;
 %}
@@ -980,19 +975,17 @@ Automatically generated code - beamline components
 /* -------------------------------------------------
 End of automatically generated code - beamline components
 ---------------------------------------------------*/
-
+  
 
 /*In order to obtain the correct event data it is necessary to place a sourceMantid arm with the position in the proper length of the instrument*/
 
 COMPONENT sourceMantid = Arm( )
 AT (0, 0, -Lsample+Lchopper) RELATIVE Sample_axis
 ROTATED (0, 0, 0) RELATIVE Sample_axis
-
-
-
 /* --------------------------------------------------------------------------------
 End of primary beamline
 -----------------------------------------------------------------------------------*/  
+
 
 
 COMPONENT TWidth = Monitor_nD(filename = "TWidth.dat", xwidth=mwidth, yheight=mheight, user1="SrcX", username1="Source position / [m]", 

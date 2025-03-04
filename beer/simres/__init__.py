@@ -3,8 +3,8 @@
 Encapsulates functions for running SIMRES simulations for 
 default BEER operation modes. 
 
-Usage:
-------
+Usage
+-----
 
     import beer.simres as simres
     import beer.modes as bmodes
@@ -37,14 +37,15 @@ _IS_SIMRES_CONFIG=None
 
 
 def configure(workpath='', java='java', simresdir=''):
-    """
-    Set environment for SIMRES: workspace directory, java command and 
-    optionally SIMRES installation directory. 
+    r"""Set environment for SIMRES.
+    
+    Define workspace directory, java command and optionally SIMRES 
+    installation directory. 
     
     Must be executed before calling simresRun().
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     workpath: str
         Working directory. If empty, creates one in user's profile.
     java: str
@@ -154,10 +155,14 @@ def execute(modes=None, n=10000, plot=False, runsetup=False):
     timeout = int(counts/10)+300
     # define modes to run  
     modeid = ''
-    if not modes:
+    if not modes or modes=='all':
         modes = bmodes.getModeKeys()
     elif isinstance(modes,str):
-        modeid = modes
+        ms = modes.split(',')
+        if len(ms)>1:
+            modes = ms
+        else:
+           modeid = modes
     elif len(modes)==1:
         modeid = modes[0]
 

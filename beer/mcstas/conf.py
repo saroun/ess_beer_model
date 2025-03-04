@@ -261,34 +261,43 @@ def infoPos(key, middle=False):
     info['span'] = [comp['start']*mm,comp['end']*mm]
     return info
 
-def infoMonitor(key, mtype='single'):
-    """
-    Create info with properties of given component: Monitor.
+def infoMonitor(key, mtype='single', nowritefile=None):
+    """Create info with properties of given component: Monitor.
     
-    Arguments:
+    Parameters
     ----------
-    
     key: str
-        component ID after which the monitor is placed
+        Component ID after which the monitor is placed
     mtype: str
-        monitor type: single (default) or spectrum
-        
-    Return:
-    -------
-        hash map with items for export to McStas files (e.g. parameter values formatted as strings)
+        Monitor type: single (default) or spectrum
+    nowritefile : str
+        Add nowritefile argument if defined.
+    Return
+    ------
+        Hash map with items for export to McStas files (e.g. parameter values 
+        formatted as strings)
         
     """
-    #comp = BC.BEER[key]
+    comp = BC.BEER[key]
     info = {}
     #mm = 0.001
-    info['ID'] = 'mon{}'.format(key)
+    if comp['type'] == 'monitor':
+        info['ID'] = '{}'.format(key)
+    else:
+        info['ID'] = 'mon{}'.format(key)
     info['desc'] = ''
     info['w'] = '{:.4f}'.format(0.1)
     info['h'] = '{:.4f}'.format(0.1)
     info['type'] = mtype
+    if nowritefile is not None:
+        info['nowritefile'] = '{}'.format(nowritefile)    
     mm = 0.001
-    comp = BC.BEER[key]
-    dist = comp['end'] + 1
+    # The monitor is defined as a component
+    if comp['type'] == 'monitor':
+        dist = 0.5*(comp['start']+comp['end'])
+    # monitor is placed after the component
+    else:    
+        dist = comp['end'] + 1
     angle = BG.beamAngle(dist, coord = 'ISCS')
     axis = BG.beamAxis(dist, coord = 'ISCS')
     info['dist'] = '{:.4f}'.format(dist*mm)
@@ -685,7 +694,7 @@ def addJump(beam, target, when='', desc=''):
     beam.append(item)
     beamline.append(item)
     
-def addMonitor(beam, key, mtype='single'):
+def addMonitor(beam, key, **kwargs):
     """
     Add monitor.
     
@@ -700,7 +709,7 @@ def addMonitor(beam, key, mtype='single'):
         Monitor type. Recognized types are 'single' or 'spectrum'
     """
     global nBMon,nComp
-    item = {'info': infoMonitor(key, mtype=mtype), 'type':TMonitor}
+    item = {'info': infoMonitor(key, **kwargs), 'type':TMonitor}
     d = [item['info']['span'][1]]
     stat = {'icomp': nComp, 'dist': d, 'nmon':nBMon, 'nseg': 1}
     item['statinfo'] = stat
@@ -763,7 +772,11 @@ def addComponent(typ, beam, key, **kwargs):
         
     def dataMDChopper(beam, key, **kwargs):
         item = {'info': infoMDChopper(key, **kwargs), 'type':TMDChopper}
-        return item    
+        return item  
+    
+    def dataMonitor(beam, key, **kwargs):
+        item = {'info': infoMonitor(key, **kwargs), 'type':TMonitor}
+        return item 
     
     item = None
     if (typ==TSlit):
@@ -801,7 +814,8 @@ def addComponent(typ, beam, key, **kwargs):
         a['idx'] = nComp
         beamline.append(a)
         item = {'info': infoGuideSegmented(key, **kwargs), 'type':TGuideSeg, 'relto':ID}
-        
+    elif (typ==TMonitor):
+        item = dataMonitor(beam, key, **kwargs)
     if (item is None):
         raise Exception('cannot add unknown component type: {}\n'.format(typ))
     else:
@@ -903,8 +917,10 @@ def cfgComponent(comp, indent='    '):
         # define elliptic profile
         if ('ell' in info.keys()):
             ell = info['ell']
+            out += indent+'MPI_MASTER(\n'
             fmt = '{}writeTaperingFile("{}", {}, {:d}, {}, &{});\n'
             out += fmt.format(indent, ell['file'], ell['ID'], ell['dir'], info['start'], ID)
+            out += indent+');\n'
             fmt = r'{}if (verbose) printf("%s: shift=%g [mm], angle = %g [deg]\n","{}",{}.shift*1000,{}.angle);'
             out += fmt.format(indent, ID, ID, ID) +'\n'
         return out
@@ -1046,12 +1062,17 @@ def compMonitor(info, relto='ISCS'):
     """
     tab = '\t'
     ID = info['ID']
+    fmt = 'COMPONENT @C = '
     if (info['type']=='spectrum'):
-        fmt = 'COMPONENT @C = L_monitor(filename="@C.dat", xwidth = 0.1, yheight = 0.1, restore_neutron = 1,\n'
-        fmt += tab + 'nL = 80, Lmin = 0.2, Lmax = 8.2)\n'
+        fmt += 'L_monitor(filename="@C.dat", nL=100, Lmin=0.2, Lmax=10.2,\n'
     else:
-        fmt = 'COMPONENT @C = Monitor(xwidth = 0.1, yheight = 0.1, restore_neutron = 1)\n'
-    out = fmt.replace('@C',ID)
+        fmt += 'Monitor('
+    fmt += 'xwidth={}, yheight={}, restore_neutron=1'
+    if 'nowritefile' in info:
+        fmt += ', nowritefile={})\n'.format(info['nowritefile'])
+    else:
+        fmt += ')\n'
+    out = fmt.replace('@C',ID).format(info['w'],info['h'])
     fmt = 'AT ({}, 0, {}) RELATIVE {}\n'
     out += fmt.format(info['shift'], info['dist'], relto)
     fmt = 'ROTATED (0, {}, 0) RELATIVE {}\n'
@@ -1279,7 +1300,7 @@ def traceComponent(comp, statinfo, relto='ISCS'):
 
 # %% Define BEER instrument components
     
-def defineInstrument():
+def defineInstrument(guide_monitors=False):
     global nBMon,nComp
     global beamMonolith, beamBunker, beamTransport, beamFocusing, beamline
     global listComp
@@ -1297,13 +1318,16 @@ def defineInstrument():
 
     # Add Monolith section    
     addComponent(TGuideTA, beamMonolith,'NBOA', nseg=7, isTilted=True, ellV='ellV1')
-    addMonitor(beamMonolith,'NBOA', mtype='spectrum')
+    addMonitor(beamMonolith,'NBOA', mtype='spectrum', nowritefile='!monoutputs')
     addComponent(TGuideTA, beamMonolith,'BBG', nseg=1, isTilted=True, ellV='ellV1')
-    addMonitor(beamMonolith,'BBG')
+    
+    if guide_monitors:
+        addMonitor(beamMonolith,'BBG')
     
     # Add Bunker section
     addComponent(TGuideMC, beamBunker,'GSW')
-    addMonitor(beamBunker,'GSW')
+    addComponent(TMonitor, beamBunker,'BM1', mtype='spectrum')
+    #addMonitor(beamBunker,'GSW')
     addComponent(TGuide, beamBunker,'GCA1')
     addComponent(TCDisc, beamBunker, 'PSC1')
     addComponent(TGuide, beamBunker,'GCA2')
@@ -1316,20 +1340,24 @@ def defineInstrument():
     addComponent(TCDisc, beamBunker, 'FC1A')      
     addComponent(TCDisc, beamBunker, 'FC1B') 
     addComponent(TGuide, beamBunker,'GCE')
-    addMonitor(beamBunker,'GCE')
+    if guide_monitors:
+        addMonitor(beamBunker,'GCE')
     addComponent(TCDisc, beamBunker, 'MCA')      
     addComponent(TCDisc, beamBunker, 'MCB')    
     addComponent(TGuide, beamBunker,'GCF')
-    addMonitor(beamBunker,'GCF')
+    if guide_monitors:
+        addMonitor(beamBunker,'GCF')
     addComponent(TMDChopper, beamBunker, 'MCC')
     addComponent(TGuide, beamBunker,'GCG')
-    addMonitor(beamBunker,'GCG')   
+    if guide_monitors:
+        addMonitor(beamBunker,'GCG')   
     #addComponent(TGuideSeg, beamBunker, 'GE1', seg=500, gap=1)
     addComponent(TGuideSeg, beamBunker, 'GE1A', seg=500, gap=1)
+    addComponent(TMonitor, beamBunker,'BM2', mtype='spectrum')
     addComponent(TGuideSeg, beamBunker, 'GE1B', seg=500, gap=1)
     addComponent(TGuideSeg, beamBunker, 'GN1', seg=500, gap=1)
     addComponent(TGuideSeg, beamBunker, 'GN2', seg=500, gap=1)
-    addMonitor(beamBunker,'GN2', mtype='spectrum')
+    addMonitor(beamBunker,'GN2', mtype='spectrum', nowritefile='!monoutputs')
     
     
     # Add Transport section
@@ -1338,29 +1366,33 @@ def defineInstrument():
         addComponent(TArm, beamTransport, 'Arm1', dist=BC.BEER['GSH2']['start']-0.0001)
 
     addComponent(TGuide, beamTransport,'GSH2')
-    addMonitor(beamTransport,'GSH2')
+    if guide_monitors:
+        addMonitor(beamTransport,'GSH2')
     addComponent(TGuide, beamTransport,'GE2AS')
     
     #addEGuideGravity(beamTransport, 'GE2A', ell='ellH1', fdir=0)
     #addEGuideGravity(beamTransport, 'GE2B', ell='ellH1', fdir=0)
     addComponent(TGuideSeg, beamTransport, 'GE2A', seg=500, gap=1)
     addComponent(TGuideSeg, beamTransport, 'GE2B', seg=1000, gap=1)
-    addMonitor(beamTransport,'GE2B')
+    if guide_monitors:
+        addMonitor(beamTransport,'GE2B')
     #addEGuideGravity(beamTransport, 'GT1')
     addComponent(TGuideSeg, beamTransport, 'GT1', seg=2000, gap=1)
-    addMonitor(beamTransport,'GT1', mtype='spectrum')
+    addMonitor(beamTransport,'GT1', mtype='spectrum', nowritefile='!monoutputs')
     # addComponent(TCDisc, beamTransport, 'FC2A', win=180, nwin=1)      
     # addComponent(TCDisc, beamTransport, 'FC2B', win=90, nwin=1) 
     addComponent(TCDisc, beamTransport, 'FC2A')      
     addComponent(TCDisc, beamTransport, 'FC2B')     
     #addEGuideGravity(beamTransport, 'GT2')
     addComponent(TGuideSeg, beamTransport, 'GT2', seg=2000, gap=1)
-    addMonitor(beamTransport,'GT2')
+    if guide_monitors:
+        addMonitor(beamTransport,'GT2')
     
     # Add Focusing section
     #addEGuideGravity(beamFocusing, 'GF1', ell='ellV2', fdir=1)
     addComponent(TGuideSeg, beamFocusing, 'GF1', seg=1000, gap=1)
-    addMonitor(beamFocusing,'GF1')
+    if guide_monitors:
+        addMonitor(beamFocusing,'GF1')
     addComponent(TSlit, beamFocusing, 'SL1')
     #addEGuideGravity(beamFocusing, 'GF2', ell='ellV2', fdir=1)
 
@@ -1370,11 +1402,13 @@ def defineInstrument():
     mseg = 6*[m]
     mseg[5] = [0.0, 0.0, m[2], m[3]]
     addComponent(TGuideSeg, beamFocusing, 'GF2', seg=seg, m = mseg, gap=1)
-    addMonitor(beamFocusing,'GF2')
+    if guide_monitors:
+        addMonitor(beamFocusing,'GF2')
     addComponent(TSlit, beamFocusing, 'SL2')
     
     addComponent(TGuide, beamFocusing,'GMINI')
-    addMonitor(beamFocusing,'GMINI')
+    if guide_monitors:
+        addMonitor(beamFocusing,'GMINI')
 
     #addComponent(TGuideSeg, beamFocusing, 'GEX1', seg=150, gap=1)
     
@@ -1399,7 +1433,8 @@ def defineInstrument():
     addComponent(TArm, beamFocusing, 'ArmGEXend', dist=BC.BEER['GEX1']['end'])
     
     # monitor at the end of exchanger
-    addMonitor(beamFocusing,'GEX1')
+    if guide_monitors:
+        addMonitor(beamFocusing,'GEX1')
     
     # input slit
     addComponent(TSlit, beamFocusing, 'SL3')
@@ -1617,7 +1652,7 @@ def modesFC1A(indent):
     return out
 
 def modes(indent):
-    out = modesLegend()
+    out = _modes_legend()
     out += modesSlits(indent)
     out += cmodesFrq(indent)
     out += wmodesFrq(indent)
@@ -1633,8 +1668,8 @@ def modes(indent):
     return out
     return out
 
-def modesLegend():
-    """ Comment before the mode setting code """
+def _modes_legend():
+    """Comment before the mode setting code."""
     out = '\n/*'+50*'-'+'\n'
     out += 'Define reference operation modes \n'
     out += 50*'-'+'\n'
@@ -1644,22 +1679,22 @@ def modesLegend():
     out += 50*'-'+'*/\n'
     return out
 
-def modesDescr():
-    """ Text in the instrument description: list of modes """
+def _modes_descr():
+    """Text in the instrument description: list of modes."""
     out = ''
     for i in range(len(BM.modes)):
         m = BM.modes[i]
         out += '* {}\t{}\t{}, {}\n'.format(i, m['ID'], m['label'], m['comment'])
     return out
 
-def initReports():
+def _init_reports():
     out = reportBeam(beamMonolith, 'Monolith section', indent+indent)
     out += reportBeam(beamBunker, 'Bunker section', indent+indent)
     out += reportBeam(beamTransport, 'Transport section', indent+indent)
     out += reportBeam(beamFocusing, 'Focusing section', indent+indent)
     return out
 
-def declarePrimary():  
+def _declare_primary():  
     global listComp
     out = "\n/* Component declarations */\n"
     for l in listComp:
@@ -1667,7 +1702,7 @@ def declarePrimary():
     out += '\n'
     return out
 
-def tracePrimary(statinfo):
+def _trace_primary(statinfo):
     out = traceBeam(beamMonolith, 'Monolith section', statinfo)
     out += traceBeam(beamBunker, 'Bunker section', statinfo)
     if _SHIELDING:
@@ -1678,51 +1713,51 @@ def tracePrimary(statinfo):
         out += '@SHIELDING_STOP\n'
     return out
 
-def getInstrFile(instrname = 'BEER_reference', inpath=None,
-                  statinfo = False, shielding=False):
-    """ Creates McStas instrument file, using provided template.
-    The template file name is constructed from the given instrument name as
+def get_instr_file(instname='BEER_reference', template='BEER_reference_v3_GPU',
+                 inpath=None, statinfo=False, shielding=False, **options):
+    """Create McStas instrument file, using provided template.
     
-    template = instrname+'.instr.template'
-    
-    Arguments:
+    Parameters
     ----------
-    
-    instrname: str
+    instname : str
         Instrument name, should be equal to the name of the template file 
         without '.instr.template' extension. The output file name will then be 
-        instrname+'.instr'
-    inpath: str
-        input directory for the template file.
+        instname+'.instr'
+    template : str
+        Template name without '.instr.template' extension.
+    inpath : str
+        Input directory for the template file.
         If not defined, search for templates in package resources.
-    statinfo: boolean
-        if true, the simulation will produce tracing statistics
-    shielding: boolean
-        if true, the instrument file will include shielding logger
+    statinfo : boolean
+        If true, the simulation will produce tracing statistics
+    shielding : boolean
+        If true, the instrument file will include shielding logger
+    options : dict
+        Options passed to :func:`defineInstrument`.
     
-    Returns:
-    --------
+    Returns
+    -------
     Content of the instrument file as a string. 
     
     """
     global _SHIELDING
     _SHIELDING = shielding
-    defineInstrument()
-    template = instrname+'.instr.template'
+    defineInstrument(**options)
+    template_name = template+'.instr.template'
     out = ''
-    declare = declarePrimary()
+    declare = _declare_primary()
     init = initPrimary(statinfo)
-    trace = tracePrimary(statinfo)
+    trace = _trace_primary(statinfo)
     ell = ellipses(indent)
-    rep = initReports()
+    rep = _init_reports()
     mymodes = modes(indent)
-    lines = getTemplate(template=instrname+'.instr', inpath=inpath)
+    lines = getTemplate(template=template+'.instr', inpath=inpath)
     for i in range(len(lines)):
         line = lines[i]
         k = line.find('@')
         if (k>=0):
             line = line.replace('@DECLARE_PRIMARY', declare)
-            if (line.find('@')>-1): line = line.replace('@MODESDESCR', modesDescr())
+            if (line.find('@')>-1): line = line.replace('@MODESDESCR', _modes_descr())
             if (line.find('@')>-1): line = line.replace('@INIT_PRIMARY', init)
             if (line.find('@')>-1): line = line.replace('@MODES', mymodes)
             # if (line.find('@')>-1): line = line.replace('@TRACE_PRIMARY', trace)
@@ -1730,9 +1765,9 @@ def getInstrFile(instrname = 'BEER_reference', inpath=None,
             if (line.find('@')>-1): line = line.replace('@REPORT', rep)
             if (line.find('@')>-1): line = line.replace('@VERSION', BC.VERSION)
             if (line.find('@')>-1): line = line.replace('@DATE', BC.DATE)
-            if (line.find('@')>-1): line = line.replace('@TEMPLATE', template)
+            if (line.find('@')>-1): line = line.replace('@TEMPLATE', template_name)
             if (line.find('@')>-1): line = line.replace('@SOURCE', 'beer.mcstas')
-            if (line.find('@')>-1): line = line.replace('@NAME', instrname)
+            if (line.find('@')>-1): line = line.replace('@NAME', instname)
             if (line.find('@')>-1): line = line.replace('@MAXCOMP', str(nComp))
             if (line.find('@')>-1): line = line.replace('@MAXMON', str(nBMon))
             if (line.find('@')>-1): line = line.replace('@MAXMODE', str(len(BM.modes)-1))
@@ -1749,7 +1784,7 @@ def getInstrFile(instrname = 'BEER_reference', inpath=None,
         out += line
     out = out.replace('@TRACE_PRIMARY', trace)
     if _SHIELDING: 
-        out = addShieldingCalculator(out)
+        out = add_shielding_calculator(out)
     else:
         if (out.find('@SHIELDING_CALC')>-1):
             out = out.replace('@SHIELDING_CALC', '')
@@ -1758,40 +1793,31 @@ def getInstrFile(instrname = 'BEER_reference', inpath=None,
     return out
  
 
-def parseTemplate(instrname = 'BEER_reference', inpath=None, outpath='', 
-                  statinfo = False, shielding=False):
-    """ Creates McStas instrument file, using provided template.
-    The template file name is constructed from the given instrument name as
-    
-    template = instrname+'.instr.template'
-    
-    Arguments:
+def parseTemplate(instname='BEER_reference', template='BEER_reference_v2', 
+                  outpath='', **options):
+    """Create McStas instrument file, using provided template.
+            
+    Parameters
     ----------
-    
-    instrname: str
-        Instrument name, should be equal to the name of the template file 
-        without '.instr.template' extension. The output file name will then be 
-        instrname+'.instr'
-    inpath: str
-        input directory for the template file.
-        If not defined, search for templates in package resources.
-    outpath: str
-        output directory for the generated McStas file
-    statinfo: boolean
-        if true, the simulation will produce tracing statistics
-    shielding: boolean
-        if true, the instrument file will include shielding logger
+    instname : str
+        Instrument name  without '.instr' extension.
+    template : str
+        Template name without the '.instr.template' extension.
+    outpath : str
+        Output directory for the generated McStas instrument file.
+        
+    options : dict
+        Other parameters passed do :func:`get_instr_file`
     """
-    out = getInstrFile(instrname=instrname, inpath=inpath,
-                  statinfo=statinfo, shielding=shielding)
-    outfile = os.path.join(outpath,instrname+'.instr')
+    out = get_instr_file(instname=instname, template=template, **options)
+    outfile = os.path.join(outpath,instname+'.instr')
     with open(outfile, 'w') as fo:
         fo.write(out)
         fo.close()
     print('BEER McStas instrument file saved as {}'.format(outfile))
  
 
-def addShieldingCalculator(inputtxt, zmin=28, zmax=158, bins=130):
+def add_shielding_calculator(inputtxt, zmin=28, zmax=158, bins=130):
     global _SHIELDING
     out = ''
     line = inputtxt

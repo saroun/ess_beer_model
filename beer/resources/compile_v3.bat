@@ -1,7 +1,7 @@
 @echo off
 rem Set environment if not done already:
 rem -------------------------------------
-rem set ver=2.7.1
+rem set ver=3.4
 rem set PATH=C:/mcstas-%ver%/bin;%PATH%
 rem set MCSTAS=C:/mcstas-%ver%/lib
 rem set MCSTAS_CFLAGS=-O2
@@ -30,7 +30,7 @@ if [%name%]==[] (
 echo Compiling %name%
 
 mcstas -o %name%.c %name%.instr
-%MCSTAS_CC% %MCSTAS_CFLAGS% -o %name%.exe %name%.c -I %MCSTAS%/libs/mcpl %MCSTAS%/libs/mcpl/libmcpl.a
+%MCSTAS_CC% %MCSTAS_CFLAGS% -o %name%.exe %name%.c -I %MCSTAS% %MCSTAS%/libmcpl.dll.a  
 
 :end
 
