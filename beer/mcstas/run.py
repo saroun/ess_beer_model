@@ -31,7 +31,9 @@ from subprocess import CalledProcessError, TimeoutExpired
 #%% Define global variables
 
 # path where the compiled Mcstas instrument is searched for.
-_MCSTAS_PATH = './'
+userpath = os.path.expanduser('~')
+_MCSTAS_PATH = os.path.join(userpath,'beer_optics','mcstas')
+
 # path where Mcstas saves results (adds mode name as subdirectory) 
 _MCSTAS_OUT = './'
 # name of the compiled McStas instrument executable  
@@ -63,13 +65,15 @@ def updatePath():
             os.environ['PATH'] = sep.join([mcstas['PATH'],path])
 
 
-def setMcStas(PATH='', MCSTAS='', MCSTAS_CC='gcc', MCSTAS_CFLAGS='-O2'):
-    """
-    Set environment for McStas. Leave argument(s) empty if 
-    you have defined them as environment variables. 
+def setMcStas(version=3, PATH='', MCSTAS='', MCSTAS_CC='gcc', MCSTAS_CFLAGS='-O2'):
+    r"""Set environment for McStas.
     
-    Parameters:
-    -----------
+    Leave argument(s) empty if you have defined them as environment variables. 
+    
+    Parameters
+    ----------
+    version : int
+        Version 2 or 3 of McStas
     PATH:
         Add a path to mcstas compiler to the environment variable PATH
     MCSTAS:
@@ -80,11 +84,18 @@ def setMcStas(PATH='', MCSTAS='', MCSTAS_CC='gcc', MCSTAS_CFLAGS='-O2'):
         Set environment variable MCSTAS_CFLAGS, options for C compiler
     """
     global _MCSTAS_ENV
+    _MCSTAS_ENV['version'] = version
     # choose the script file
     if sys.platform.startswith('win'):
-        _MCSTAS_ENV['cmd'] = 'compile.bat'
+        if version==2:
+            _MCSTAS_ENV['cmd'] = 'compile.bat'
+        else:
+            _MCSTAS_ENV['cmd'] = 'compile_v3.bat'
     else:
-        _MCSTAS_ENV['cmd'] = 'compile.sh'
+        if version==2:
+            _MCSTAS_ENV['cmd'] = 'compile.sh'
+        else:
+            _MCSTAS_ENV['cmd'] = 'compile_v3.sh'
     
     # Set environmentvalues from arguments if defined
     e = {}
@@ -116,9 +127,10 @@ def setMcStas(PATH='', MCSTAS='', MCSTAS_CC='gcc', MCSTAS_CFLAGS='-O2'):
     
 
 def getMcStas():
-    """
-    Returns:
-    --------
+    r"""Get environment variables for McStas compiler.
+    
+    Returns
+    -------
     McStas compiler environment as dict with keys:
 
     PATH:
@@ -138,20 +150,17 @@ def getMcStas():
 
 
 def checkConfig(config=None):
-    """
-    Check that Mcstas project configuration is correct.
+    """Check that Mcstas project configuration is correct.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     config: 
         McStas project configuration in the format returned by getConfig()    
     
-    See also:
-    --------
+
+    See `getConfig()` for getting information on currect configuration.
     
-    `getConfig()` for getting information on currect configuration.
-    
-    `setConfig()` for setting the configuration.        
+    See `setConfig()` for setting the configuration.        
         
     """
     # check that all keys are present
@@ -261,12 +270,11 @@ def getConfig():
         
 
 def createWorkspace():
-    """
-    Check workspace directories and create missing ones.
+    """Check workspace directories and create missing ones.
+    
     Copy resource files to the workspace directory and check the setup 
     (files exist).
     """
-    
     # create workspace directories
     config = getConfig()
     dirs = [config['OUTPATH'], config['WORKPATH']]
@@ -280,29 +288,26 @@ def createWorkspace():
                 raise Exception(e)
 
     # copy resource files to workspace
-    if sys.platform.startswith('win'):
-        files = ['compile.bat']
-    else:
-        files = ['compile.sh']
+    files = [_MCSTAS_ENV['cmd']]
     copyResources(config['WORKPATH'], files=files)
         
 
 def setConfig(workpath='', instname='BEER_reference', outpath='out'):
-    """
-    Set McStas project configuration. Create workspace files and directories
-    if needed. 
+    """Set McStas project configuration.
+    
+    Create workspace files and directories if needed. 
     
     Must be executed before calling run* functions from this module.
     
-    Parameters:
+    Parameters
     ----------
-    workpath: str
+    workpath : str
         Root project directory with instrument data and output. 
         If not defined, takes a default path in user profile (./beer_optics/mcstas) 
-    instname: str
+    instname : str
         Name of the McStas instrument to run. Currently only `BEER_reference` 
         is defined in resources.
-    outpath: str
+    outpath : str
         Path where Mcstas saves results (adds mode name as subdirectory).
         If relative, it is assumed to be a child of `workpath`. 
     
@@ -311,10 +316,6 @@ def setConfig(workpath='', instname='BEER_reference', outpath='out'):
     
     if workpath:
         _MCSTAS_PATH = os.path.normpath(workpath)
-    else:
-        userpath = os.path.expanduser('~')
-        _MCSTAS_PATH = os.path.join(userpath,'beer_optics','mcstas')
-
     if outpath:
         if os.path.isabs(outpath):  
             _MCSTAS_OUT = os.path.normpath(outpath)
@@ -328,31 +329,39 @@ def setConfig(workpath='', instname='BEER_reference', outpath='out'):
 
 #%% Create instrument file and compile it
 
-def createInstrument(statinfo = False, shielding=False, inpath=None):
-    """ Creates McStas instrument file from a template corresponding
-    to the instrument name. Default is `BEER_reference`.
-    The created file is saved in the workspace as defined by setConfig(). 
+def createInstrument(template='', inpath=None, instname='', 
+                     **options):
+    """Create McStas instrument file from a template.
+    
+    The created file is saved in the workspace as defined by :func:`setConfig`. 
     
     The template file is searched for in the package resources, 
     unless `inpath` is defined.
     
-    Parameters:
+    Parameters
     ----------
-    statinfo: boolean
-        if true, the simulation will produce tracing statistics
-    shielding: boolean
-        if true, the instrument file will include shielding logger
+    template : str
+        Template name. If empty, use the instrument name (see :func:`setConfig`)
     inpath: str
         path where to search for instrument template. If not defined, use
         package resources.
+    instname : str
+        Instrument name (without instr extension). If empty, use the name 
+        defined by :func:`setConfig`
     """
     config = getConfig()
     checkConfig(config)
-    BMC.parseTemplate(instrname = config['INSTR'], 
+    if not template:
+        template = config['INSTR']+'_3x_GPU'
+    if not instname:
+        instname = config['INSTR']
+    else:
+        setConfig(instname=instname)
+    BMC.parseTemplate(instname=instname, 
+                  template=template,
                   outpath=config['WORKPATH'], 
                   inpath=inpath,
-                  statinfo = statinfo, 
-                  shielding=shielding)
+                  **options)
 
 
 def compileInstrument(verify=True):
@@ -389,10 +398,7 @@ def compileInstrument(verify=True):
     config = getConfig()
     instfile = os.path.join(config['WORKPATH'],config['INSTR']+'.instr')
     if not os.path.isfile(instfile):
-        createInstrument(statinfo=False, shielding=False)
-    if not os.path.isfile(instfile):
-        print('ERROR: Instrument file is missing: {}'.format(instfile))
-        return
+        raise Exception('Instrument file is missing: {}'.format(instfile))
     
     # run compiler using the script compile.* from resources
     res = False
@@ -716,6 +722,7 @@ def runModes(modes=[], counts=1e6, timeout=3600, **kwargs):
             modes.extend(['DS1_0','DS1_-1'])
     res = (len(modes)>0)
     for m in modes:
+        m = m.strip()
         sm = m.split('_')
         npls=0
         if (len(sm)>1):

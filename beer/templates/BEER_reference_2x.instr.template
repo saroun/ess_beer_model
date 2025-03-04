@@ -7,9 +7,9 @@
 * Written by: Jan Saroun (saroun@ujf.cas.cz)
 * Date: 15/2/2017
 * Origin: Nuclear Physics Institute, CAS, Rez
-* Release: McStas 3.5.1
-* Version: 1.9
-* Updated: 2025-02-18
+* Release: McStas
+* Version: 1.4
+* Updated: 9/6/2020
 * %INSTRUMENT_SITE: ESS
 *
 * Diffractometer BEER, primary part, butterfly moderator
@@ -36,13 +36,12 @@
 * npulse: [] Pulse number to focus at. 
 * misfit_h: [m] Random misfit of guide elements, horizontal 
 * misfit_v: [m] Random misfit of guide elements, vertical
-* monoutputs: [] Set to 0 to skip showing monitor data except of BM1, BM2 and BM3
 * %Link
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT @NAME(int mode=0, lambda=0, int verbose=0, int npulse=0, misfit_h=2e-5, misfit_v=1e-4, int monoutputs=1)
+DEFINE INSTRUMENT @NAME(int mode=0, lambda=0, int verbose=0, int npulse=0, misfit_h=2e-5, misfit_v=1e-4)
 
 DECLARE
 
@@ -399,22 +398,8 @@ void writeTaperingFile(char* file_name, double ell[], int dir, double zin, TGuid
 		}
 		fprintf(hfile, "%g   %g",h2, w2);
 		fclose(hfile);
-	}
+	}	
 }  
-
-// Scattering angle for given detector pixel position and take-off angle in rad
-double pixel_angle(double x, double y, double LD, double tth) {
-	double x1, z1, si, co;
-	si = sin(tth);
-	co = cos(tth);
-	x1 = LD*si + x*co;
-	z1 = LD*co - x*si;
-	int sg = x1>0?1:-1;
-	double qT =  sg*sqrt(x1*x1+y*y);
-	printf("x=%g, y=%g, z=%g, qT=%g\n",x1,y,z1,qT);
-	double res = atan2(sqrt(x1*x1+y*y), z1);
-	return res;
-}
 
 /* --------------------------------------------------
 Automatically generated code - reference modes
@@ -444,8 +429,7 @@ int nMonitors = 0;
 
    
 // counter of neutrons emitted by the source  (can be used for statistics)  
-long srccount;
-#pragma acc declare create(srccount)
+long srccount; 
  
 /* Add a component to count statistics */ 
 void addComponent(char *id, int idx) {
@@ -517,9 +501,9 @@ Basic instrument constants
    const double taumax=1.75/25/14;   
 // time to pulse centre [s]   
    const double t_offset = 0.0016;
-// detector dimensions
-   double det_x = 1.0; // horizontal
-   double det_y = 1.0;  // vertical
+// detector span [deg]
+   const double det_ah = 30; // horizontal
+   const double det_av = 30; // vertical
 // ISCS definition with respect to beamport coordinates   
    const double  bp_angle=0.3;   // insert axis angle
    const double  bp_x0=-0.03;    // beam centre at the moderator
@@ -548,14 +532,12 @@ They are defined by mode setting,  see setMode()
 // moderator -> pulse chopper distance
    double Lchopper; 
 // Exchanger switcch on/off   
-   int GF3On;
-#pragma acc declare create(GF3On)
+   int GF3On; 
 
 // nominal ToF values to the pulse chopper (t0) sample and detector (set for given lambda)
    double tof_t0, tof_sample, tof_det;
 // source time focusing data
    double foc_time, foc_dist, foc_dt;
-#pragma acc declare create(foc_pls)
    int foc_pls;
 // d-range for given tth (take-off angle), detector span and wavelength range
    double d_min, d_max;
@@ -563,14 +545,15 @@ They are defined by mode setting,  see setMode()
 // radial collimator parameters, set in setCollimator()  
    double col_h1, col_h2; // entry and exit heights
    double col_rad; // radius (entry distance)
-   #pragma acc declare create(Rad2On)
    int Rad2On; // Radial collimator on/off   
+   
 // other auxilliary variables
    char options1[256];
    
 // variables for monitor ranges
    double mwidth, mheight, mtof1, mtof2, mdivx, mdivy, mlam1, mlam2; 
-
+// monitoring of emision position from the source   
+   double SrcX, SrcY, SrcZ;
 
 /* Setting of the secondary radial collimator, (ENGIN-X system) 
 Allowed widths are 0.5, 1, 2, 3, 4 mm
@@ -593,7 +576,6 @@ Allowed widths are 0.5, 1, 2, 3, 4 mm
             col_rad=cold[2];
             Rad2On=0;
         }
-        #pragma acc update device(Rad2On)
         // calculate height (add max. sample height 2 cm)
         col_h1=0.02+2*col_rad*tan(col_angv*DEG2RAD/2);
         col_h2=0.02+2*(col_rad+col_len)*tan(col_angv*DEG2RAD/2);
@@ -608,8 +590,8 @@ lam0 = nominal wavelength for chopper phase calculation
         double v0 = K2V*2*PI/lam0; 
         
         // wavelength bandwidth corresponfding to 1 period
-//        double vT = (Lsample+Ldet)*14;
-//        double lamT = K2V*2*PI/vT;
+        double vT = (Lsample+Ldet)*14;
+        double lamT = K2V*2*PI/vT;
         
         // chopper modes for given reference mode
         int mw = mod_wmodes[m];
@@ -654,7 +636,6 @@ lam0 = nominal wavelength for chopper phase calculation
         SL2.h = mod_S2_h[m]*0.001;
         SL3.h = mod_S3_h[m]*0.001;
         GF3On = mod_GF3[m];
-#pragma acc update device(GF3On)
 
         // movable PSC2 with fixed GCA3 and GCA4
         //double d1 = PSC2.dist - GCA3.dist;
@@ -742,8 +723,7 @@ lam0 = nominal wavelength for chopper phase calculation
 
         // Set radial collimator
         // only used by secondary spectrometer, if defined
-        setCollimator(colw);
-#pragma acc update device(foc_pls)
+        setCollimator(colw); 
     };
    
 /* reporting functions */   
@@ -799,12 +779,6 @@ lam0 = nominal wavelength for chopper phase calculation
 
 %}
 
-USERVARS %{
-  // monitoring of emision position from the source   
-  double SrcX;
-  double SrcY;
-  double SrcZ;
-%}
 
 INITIALIZE
 %{  
@@ -824,43 +798,41 @@ dbgn=0;
 // slope of supermirror reflectivity 	
 	m_alpha = (1.0-R_m3)/(m_Qc*2);
 // mean velocity for phase setting
-    double v0 = hovm/lambda;
-    double vT = (Lsample+Ldet)*14; // wavelength bandwidth corresponding to 1 period
-    double lamT = K2V*2*PI/vT;
+    double v0 = hovm/lambda; 
 	double vmax = hovm/Lmin;
     double vmin = hovm/Lmax;
 // calculate theta and d-range 
     double thmin, thmax;
-	// detector span [deg]
-	double ah = atan2(0.5*det_x,Ldet)/DEG2RAD;  // horizontal
-    double av = atan2(0.5*det_y,Ldet)/DEG2RAD;  // vertical
-	
-	// minimum scattering angle
-	if (tth-ah <= 0.0) {
-		thmin = 0.0;
-	} else if (tth-ah <= 90.0) {
-		thmin = 0.5*pixel_angle(-0.5*det_x, 0.0, Ldet, tth*DEG2RAD);
+	double kz;
+	// range pf Bragg angles
+	if (tth-0.5*det_ah > 0.1) {
+		thmin = 0.5*(tth-0.5*det_ah)*DEG2RAD;
 	} else {
-		thmin = 0.5*pixel_angle(-0.5*det_x, 0.5*det_y, Ldet, tth*DEG2RAD);
+		thmin = 0.0;
 	}
-	// maximum scattering angle
-	if (tth+ah <= 90.0) {
-		thmax = 0.5*pixel_angle(0.5*det_x, 0.0, Ldet, tth*DEG2RAD);
-	} else if (tth+ah < 180.0) {
-		thmax = 0.5*pixel_angle(0.5*det_x, 0.5*det_y, Ldet, tth*DEG2RAD);
+	if ((tth+0.5*det_ah) < 89.0) {
+		kz = cos((tth+0.5*det_ah)*DEG2RAD);
+		if (kz > 0) {
+			thmax = 0.5*acos(cos(0.5*det_av*DEG2RAD)*kz);
+		} else {
+			thmax = 0.5*acos(kz);
+		}
 	} else {
 		thmax = 0.499*PI;
 	}
 	
-	// range of dhkl (for pattern calculation)
-	d_min = 0.5*(lambda-0.5*lamT)/sin(thmax);
-	d_max = fmin(0.5*(lambda+0.5*lamT)/sin(thmin),10.0);
+	// range of dhkl
+	d_min = 0.5*Lmin/sin(thmax);
+	if (thmin>0) {
+		d_max = 0.5*Lmax/sin(thmin);
+	} else {
+		d_max = 10;
+	}
 	printf("Bragg angle span [deg]: %g, %g \n", thmin/DEG2RAD, thmax/DEG2RAD);
 	printf("dhkl span [A]: %g, %g \n", d_min, d_max);
 	
 // clear source counter	
-	srccount = 0;
-#pragma acc update device(srccount)
+	srccount = 0;	
 
 /*  START OF INSTRUMENT GEOMETRY */	 
 
@@ -895,8 +867,8 @@ End of components definition
     double mgn=0.0; // margin for wavelength and time
 	mwidth=0.06; // [m]
 	mheight=0.06; // [m]
-	mtof1=Lsample*(1.0/vmax-mgn*(1.0/vmin-1.0/vmax)); // minimum ToF [s]
-	mtof2=Lsample*(1.0/vmin+mgn*(1.0/vmin-1.0/vmax))+(nframes-1)/14; // maximum ToF [s]
+	mtof1=Lsample*(1.0/vmax-mgn*(1.0/vmin-1.0/vmin)); // minimum ToF [s]
+	mtof2=Lsample*(1.0/vmin+mgn*(1.0/vmin-1.0/vmin))+(nframes-1)/14; // maximum ToF [s]
 	// add pulse width, except of "monochromatic" setups
 	if ((mtof2-mtof1) > 0.003) {
 		mtof1=mtof1-tau/2;
@@ -911,7 +883,7 @@ End of components definition
 	mlam2=Lmax+(Lmax-Lmin)*mgn;
 	mlam1=fmax(0.0,mlam1);
 
-/* Verbose reporting */	
+/* Verobse reporting */	
 
 	if (verbose==1) {
 /* -------------------------------------------------
@@ -921,8 +893,7 @@ Automatically generated code - setup report
 /* -------------------------------------------------
 End of setup report
 ---------------------------------------------------*/
-	    printf("\nPulse chopper at %g [m]\n",Lchopper);
-		printf("\nToF length [m]: %g \n",Lsample-Lchopper);
+		printf("\nPulse chopper at %g [m]\n",Lchopper);
 	}
 	// printf("Time focusing: dist=%g, time=%g, width=%g\n",foc_dist, foc_time, foc_dt);
     if (GF3On) {
@@ -932,9 +903,6 @@ End of setup report
     }
 // define source flux distribution range for Monitor_nD	
 	sprintf(options1,"user1 bins=200 limits=[-0.1,0.1]");
-	#ifdef USE_MPI
-	MPI_Barrier(MPI_COMM_WORLD);
-	#endif
 %} 
 
 TRACE
@@ -943,26 +911,24 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 /* 
-COMPONENT ESS_W2 = MCPL_source( filename = "fW2.mcpl", Lmin=Lmin, Lmax=Lmax, smearing=1, verbose=0, I0=1.56e10)
+COMPONENT Source = MCPL_source( filename = "fW2.mcpl", Lmin=Lmin, Lmax=Lmax, smearing=1, verbose=0, I0=1.56e10)
 AT(0,0,0) RELATIVE Origin
 ROTATED (0 ,0 ,0) RELATIVE Origin 
 EXTEND
 %{ 
  SrcX=x;SrcY=y;SrcZ=z;
- #pragma acc atomic
  srccount = srccount + 1;
  t -= t_offset;
 %}
 */
  
-COMPONENT ESS_W2 = ESS_butterfly(sector="W", beamline=2, Lmin=Lmin, Lmax=Lmax, dist=0, target_index=+2,
+COMPONENT Source = ESS_butterfly(sector="W", beamline=2, Lmin=Lmin, Lmax=Lmax, dist=0, target_index=+2,
  focus_xw=NBOA.w1+0.01, focus_yh=NBOA.h1+0.01, cold_frac=0.5, n_pulses=nframes, tmax_multiplier=taumax/tau, acc_power=5,
  tfocus_dist=foc_dist, tfocus_time=foc_time, tfocus_width=foc_dt)
 AT (0, 0, 0) RELATIVE Origin 
 EXTEND
 %{ 
  SrcX=x;SrcY=y;SrcZ=z;
- #pragma acc atomic
  srccount = srccount + 1;
  t -= t_offset - foc_pls/14.0;
 %}
@@ -980,23 +946,13 @@ Automatically generated code - beamline components
 /* -------------------------------------------------
 End of automatically generated code - beamline components
 ---------------------------------------------------*/
-
-
-/*In order to obtain the correct event data it is necessary to place a sourceMantid arm with the position in the proper length of the instrument*/
-
-COMPONENT sourceMantid = Arm( )
-AT (0, 0, -Lsample+Lchopper) RELATIVE Sample_axis
-ROTATED (0, 0, 0) RELATIVE Sample_axis
-
-
-
+  
 /* --------------------------------------------------------------------------------
 End of primary beamline
 -----------------------------------------------------------------------------------*/  
 
 
-COMPONENT TWidth = Monitor_nD(filename = "TWidth.dat", xwidth=mwidth, yheight=mheight, user1="SrcX", username1="Source position / [m]", 
-options=options1, restore_neutron=1, nowritefile=!monoutputs)
+COMPONENT TWidth = Monitor_nD(filename = "TWidth.dat", xwidth=mwidth, yheight=mheight, user1=SrcX, username1="Source position / [m]", options=options1, restore_neutron=1)
   AT (0, 0, 0) RELATIVE Sample_axis
 
 /* Monitor beam characteristics */
@@ -1009,60 +965,63 @@ COMPONENT Lmon = L_monitor(
 
 COMPONENT TofMon = TOF_monitor(
     nt = 160, filename = "TofMon.dat", xwidth = mwidth, yheight = mheight,
-    tmin = mtof1*1e6, tmax = mtof2*1e6, restore_neutron = 1, nowritefile=!monoutputs)
+    tmin = mtof1*1e6, tmax = mtof2*1e6, restore_neutron = 1)
   AT (0, 0, 0) RELATIVE Sample_axis
 
 
 COMPONENT XMon = PSDlin_monitor(
-    nbins = 100, filename = "XMon.dat", xwidth = mwidth,
-    yheight = mheight, restore_neutron = 1, nowritefile=!monoutputs)
+    nx = 100, filename = "XMon.dat", xwidth = mwidth,
+    yheight = mheight, restore_neutron = 1)
   AT (0, 0, 0) RELATIVE Sample_axis
 
 COMPONENT YMon = PSDlin_monitor(
-    nbins = 100, filename = "YMon.dat", xwidth = mheight,
-    yheight = mwidth, restore_neutron = 1, vertical=1, nowritefile=!monoutputs)
+    nx = 100, filename = "YMon.dat", xwidth = mheight,
+    yheight = mwidth, restore_neutron = 1)
   AT (0, 0, 0) RELATIVE Sample_axis
+  ROTATED (0, 0, 90) RELATIVE Sample_axis  
 
-COMPONENT HDivMon =Div1D_monitor(
-    ndiv = 100, filename = "HDivMon.dat", xwidth = mwidth, yheight = mheight, 
-	maxdiv = 0.5*mdivx, restore_neutron = 1, nowritefile=!monoutputs)
+COMPONENT HDivMon =Hdiv_monitor(
+    nh = 100, filename = "HDivMon.dat", xwidth = mwidth, yheight = mheight, 
+	h_maxdiv = 0.5*mdivx, restore_neutron = 1)
   AT (0, 0, 0) RELATIVE Sample_axis
   
- COMPONENT VDivMon = Div1D_monitor(
-    ndiv = 100, filename = "VDivMon.dat", xwidth = mwidth, yheight = mheight, 
-	maxdiv = 0.5*mdivy, restore_neutron = 1, vertical=1, nowritefile=!monoutputs)
+ COMPONENT VDivMon = Hdiv_monitor(
+    nh = 100, filename = "VDivMon.dat", xwidth = mwidth, yheight = mheight, 
+	h_maxdiv = 0.5*mdivy, restore_neutron = 1)
   AT (0, 0, 0) RELATIVE Sample_axis
+  ROTATED (0, 0, 90) RELATIVE Sample_axis  
   
 COMPONENT DivMon = Divergence_monitor(
     nh = 100, nv = 100, filename = "DivMon.dat", xwidth = mwidth,
     yheight = mheight, maxdiv_h = 0.5*mdivx, maxdiv_v = 0.5*mdivy,
-    restore_neutron = 1, nowritefile=!monoutputs)
+    restore_neutron = 1)
   AT (0, 0, 0) RELATIVE Sample_axis
 
   COMPONENT XYMon = PSD_monitor(
     nx = 100, ny = 100, filename = "XYMon.dat", xwidth = mwidth,
-    yheight = mheight, restore_neutron = 1, nowritefile=!monoutputs)
+    yheight = mheight, restore_neutron = 1)
   AT (0, 0, 0) RELATIVE Sample_axis
 
  COMPONENT HDivPos = DivPos_monitor(
-    nb = 100, ndiv = 100, filename = "HDivPos.dat", xwidth = mwidth,
-    yheight = mheight, maxdiv = 0.5*mdivx, restore_neutron = 1, nowritefile=!monoutputs)
+    nh = 100, ndiv = 100, filename = "HDivPos.dat", xwidth = mwidth,
+    yheight = mheight, maxdiv_h = 0.5*mdivx, restore_neutron = 1)
   AT (0, 0, 0) RELATIVE Sample_axis
 
 COMPONENT VDivPos = DivPos_monitor(
-    nb = 100, ndiv = 100, filename = "VDivPos.dat", xwidth = mheight,
-    yheight = mwidth, maxdiv = 0.5*mdivy, restore_neutron = 1, vertical = 1, nowritefile=!monoutputs)
+    nh = 100, ndiv = 100, filename = "VDivPos.dat", xwidth = mheight,
+    yheight = mwidth, maxdiv_h = 0.5*mdivy, restore_neutron = 1)
   AT (0, 0, 0) RELATIVE Sample_axis	
+  ROTATED (0, 0, 90) RELATIVE Sample_axis
 	
 COMPONENT TofLam = TOFLambda_monitor(
     nL = 512, nt = 512, tmin = mtof1*1e6, tmax = mtof2*1e6,
     filename = "TofLam.dat", xwidth = mwidth, yheight = 0.1, Lmin = mlam1,
-    Lmax = mlam2, restore_neutron = 1, nowritefile=!monoutputs)
+    Lmax = mlam2, restore_neutron = 1)
   AT (0, 0, 0) RELATIVE Sample_axis
   
 COMPONENT BSTPMon = PSD_monitor(
     nx = 100, ny = 100, filename = "BSTPMon.dat", xwidth = 0.5,
-    yheight = 0.5, restore_neutron = 1, nowritefile=!monoutputs)
+    yheight = 0.5, restore_neutron = 1)
   AT (0, 0, 8.3) RELATIVE Sample_axis
   
 @SHIELDING_ITER

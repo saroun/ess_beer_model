@@ -1,32 +1,68 @@
 # -*- coding: utf-8 -*-
-"""
+"""Functions for running McStas simulations for default BEER operation modes.
 
-Encapsulates functions for running McStas simulations for 
-default BEER operation modes. 
+Usage
+-----
 
-Usage:
-------
+import beer.mcstas as mcstas
 
-    import beer.mcstas as mcstas
+# configure workspace and McStas environment 
+mcstas.configure(workpath='my_path',
+                 PATH='/usr/bin', 
+                 MCSTAS='/usr/share/mcstas/3.4')
 
-    # configure workspace and McStas environment 
-    mcstas.configure(workpath='mypath', BINPATH='/usr/bin', MCSTAS='/usr/share/mcstas/2.6')
+# create instrument file 
+mcstas.create_instrument()
 
-    # create instrument file 
-    mcstas.createInstrument(statinfo=False, shielding=False)
+# compile instrument file
+mcstas.compile_instrument(force=True)
 
-    # compile instrument file
-    mcstas.compileInstrument(force=False)
+# run simulation for one modes
+result = mcstas.execute(modes='PS2', n=1e7, plot=True)
 
-    # run simulation for one modes
-    result = mcstas.execute(modes='PS2', n=1e7, plot=True)
+# or run simulation for selected modes
+result = mcstas.execute(modes='F0,F1', n=1e7, plot=True)
 
-    # or run simulation for all modes 
-    import beer.modes as bmodes
-    result = mcstas.execute(modes=bmodes.getModeKeys(), n=1e7, plot=True)
+# or run simulation for all modes 
+import beer.modes as bmodes
+result = mcstas.execute(modes=bmodes.getModeKeys(), n=1e7, plot=True)
 
-    # to replot results:  
-    mcstas.plotResults(result, pdf='myresult')
+# to replot results:  
+mcstas.plot_result(result, title='Test simulation', pdf='myresult')
+
+# create instrument file 
+mcstas.create_instrument()
+
+# compile instrument file
+mcstas.compile_instrument(force=True)
+
+# run simulation for one modes
+result = mcstas.execute(modes='PS2', n=1e7, plot=True)
+
+# or run simulation for selected modes
+result = mcstas.execute(modes='F0,F1', n=1e6, plot=True)
+
+# or run simulation for all modes 
+import beer.modes as bmodes
+result = mcstas.execute(modes=bmodes.getModeKeys(), n=1e7, plot=True)
+
+# to replot results:  
+mcstas.plot_result(result, title='Test simulation', pdf='myresult')
+
+
+
+# Simulation using an instrument template provided by user
+mcstas.create_instrument(template='BEER_user', 
+                         inpath='.', 
+                         instname='BEER_Vexperiment')
+mcstas.compile_instrument(force=True)
+result = mcstas.execute(modes='F0', n=1e6, plot=True, monoutputs=1)
+
+# Only generate the instrument file
+mcstas.conf.parseTemplate(instname='BEER_user', 
+                          template='BEER_user',
+                          inpath='.',
+                          outpath='.')
 
 ------------------------------------------------------
 Created on Mon Jul 20 16:58:52 2020
@@ -41,67 +77,163 @@ _IS_MCSTAS=None
 _IS_MCSTAS_CONFIG=None
 
 
-def configure(workpath='', BINPATH='', MCSTAS='', MCSTAS_CC='gcc', 
-                 MCSTAS_CFLAGS='-O2'):
+def configure_workspace(**kwargs):
+    """Set McStas instrument project configuration.
+    
+    Create workspace files and directories if needed. 
+    
+    Shortcut to :func:`beer.mcstas.run.setConfig`.
+    
+    Parameters
+    ----------
+    workpath : str
+        Root project directory with instrument data and output. 
+        If not defined, the work path is set in the user profile (home) 
+        directory (./beer_optics/mcstas) 
+    instname : str
+        Name of the McStas instrument to run. Default is `BEER_reference` 
+        with the template defined in resources.
+    outpath : str
+        Path where McStas saves results (mode name is added as a subdirectory).
+        If relative, it is assumed to be a child of `workpath`. 
+    
     """
-    Set environment for McStas.
+    _exe.setConfig(**kwargs)
     
-    Must be executed before mcstasRun().
     
-    Parameters:
-    -----------
-    workpath:
-        Working directory. If empty, creates one in user's profile.
-    BINPATH:
-        Add a path to mcstas compiler to the environment variable PATH,
-        e.g. C:\mcstas-2.6\bin
+def configure_mcstas(**kwargs):
+    """Set McStas compiler configuration.
+    
+    This funciton allows to set environment variables needed by McStas compiler
+    if not defined by the system environment. 
+    
+    Shortcut to :func:`beer.mcstas.run.setMcStas`.
+    
+    Parameters
+    ----------
+    version : int
+        Version 2 or 3 of McStas
+    PATH:
+        Path to mcstas binary, to be added to the environment variable PATH
     MCSTAS:
-        Set environment variable MCSTAS: McStas path, e.g. C:\mcstas-2.6\lib
+        Path to McStas component libraries
     MCSTAS_CC:
-        Set environment variable MCSTAS_CC (c compiler, e.g. gcc)
+        Environment variable MCSTAS_CC (c compiler, e.g. gcc)
     MCSTAS_CFLAGS:
-        Set environment variable MCSTAS_CFLAGS, options for C compiler
+        Environment variable MCSTAS_CFLAGS, options for C compiler
+    
     """
+    _exe.setMcStas(**kwargs)
+    
+
+def verify_workspace():
+    """Check the workspace and McStas configurations."""
     global _IS_MCSTAS_CONFIG,_IS_MCSTAS
-    _exe.setMcStas(PATH=BINPATH, 
-              MCSTAS=MCSTAS,
-              MCSTAS_CC=MCSTAS_CC,
-              MCSTAS_CFLAGS=MCSTAS_CFLAGS
-              )
-    # Set the configuration
-    # use `workpath=path` parameter to define a custom workspace directory 
-    _exe.setConfig(workpath=workpath)
     # Check the configuration
     _IS_MCSTAS_CONFIG = _exe.verifyConfig()
     _IS_MCSTAS = _exe.verifyMcStas()
+    
+    
+def configure(version=3, PATH='', MCSTAS='', MCSTAS_CC='gcc', 
+              MCSTAS_CFLAGS='-O2', workpath='', instname='BEER_reference', 
+              outpath='out'):
+    """Configure the instrument project workspace and McStas compiler.
+    
+    - Create workspace files and directories if needed and populate them with 
+      required content.
+    - Set environment for McStas compiler.
+    
+    This function encapsulates all configuration tasks required to compile 
+    and run McStas instrument simulation.
+
+    Parameters
+    ----------
+    version : int
+        Version 2 or 3 of McStas
+    PATH:
+        Path to mcstas binary, to be added to the environment variable PATH
+    MCSTAS:
+        Path to McStas component library (lib) 
+    MCSTAS_CC:
+        Environment variable MCSTAS_CC (c compiler, e.g. gcc)
+    MCSTAS_CFLAGS:
+        Environment variable MCSTAS_CFLAGS, options for C compiler        
+    workpath : str
+        Root project directory with instrument data and output. 
+        If not defined, the work path is set in the user profile (home) 
+        directory (./beer_optics/mcstas) 
+    instname : str
+        Name of the McStas instrument to run. Currently only `BEER_reference` 
+        is defined in resources.
+    outpath : str
+        Path where McStas saves results (mode name is added as a subdirectory).
+        If relative, it is assumed to be a child of `workpath`. 
+
+    """
+    configure_mcstas(version=version,
+                        PATH=PATH, 
+                        MCSTAS=MCSTAS, 
+                        MCSTAS_CC=MCSTAS_CC,
+                        MCSTAS_CFLAGS=MCSTAS_CFLAGS)
+    configure_workspace(workpath=workpath, 
+                     instname=instname, 
+                     outpath=outpath)
+    verify_workspace()
 
 
-def createInstrument(statinfo = False, shielding=False, inpath=None):
-    """ Creates McStas instrument file from a template corresponding
-    to the instrument name. Default is `BEER_reference`.
-    The created file is saved in the workspace as defined by setConfig(). 
+def create_instrument(version=None, template=None, instname='', inpath=None, 
+                      GPU=True, **options):
+    """Create McStas instrument file from a template.
+    
+    If not defined the template is derived from the instrument name. 
+    Default is `BEER_reference`.
+    The created file is saved in the workspace as defined by :func:`configure`. 
     
     The template file is searched for in the package resources, 
     unless `inpath` is defined.
     
-    Parameters:
+    Parameters
     ----------
-    statinfo: boolean
-        if true, the simulation will produce tracing statistics
-    shielding: boolean
-        if true, the instrument file will include shielding logger
-    inpath: str
-        path where to search for instrument template. If not defined, use
+    version : int
+        McStas version, 2 or 3. The version passed to configure is used by 
+        default.
+    template : str
+        Template name. If not defined, derive one from the instrument name, 
+        McStas version and the GPU value.
+    inpath : str
+        Path where to search for instrument template. If not defined, use
         package resources.
+    instname : str
+        Instrument name (without instr extension). If empty, use the name 
+        defined by :func:`configure_workspace`
+    GPU : bool
+        Set true to use the template with GPU-related definitions
     """    
-    _exe.createInstrument(statinfo=statinfo, shielding=shielding, inpath=inpath)
+    config = _exe.getConfig()
+    if not instname:
+        instname = config['INSTR']
+    else:
+        _exe.setConfig(instname=instname)
+    if not version in [2,3]:
+        version = _exe.getMcStas()['version']
+    if template is None:
+        template = instname
+        if version==2:
+            template += '_2x'
+        elif version==3:
+            template += '_3x'
+        if GPU:
+            template += '_GPU'
+    _exe.createInstrument(template=template, 
+                          inpath=inpath,
+                          instname=instname,
+                          **options)
 
 
-def compileInstrument(force=False):
-    """
-    Compile default instrument file. 
+def compile_instrument(force=False):
+    """Compile default instrument file.
     
-    Parameters:
+    Parameters
     ----------
     force: boolean
         if false, compile only if the target executable does not exist
@@ -126,12 +258,12 @@ def compileInstrument(force=False):
     
     if not _IS_MCSTAS_CONFIG:
         print('ERROR: workspace configuration failed?')
-        print('Try to run {}.mcstasConfig() again.'.format(fn))
+        print('Try to run {}.configure() again.'.format(fn))
         return
     
     if not _IS_MCSTAS:
         print('ERROR: McStas compiler configuration failed?')
-        print('Try to run {}.mcstasConfig() again.'.format(fn))
+        print('Try to run {}.configure() again.'.format(fn))
         return
 
     out = _exe.compileInstrument(verify=False)
@@ -139,17 +271,18 @@ def compileInstrument(force=False):
         print('WARNING: could not compile instrument file')
     
 
-def execute(modes=None, n=1e5, plot=False, docompile=False, **kwargs):
-    """
-    Run McStas simulation for given BEER modes and number of neutrons.
+def execute(modes=None, n=1e5, plot=False, docompile=False, **params):
+    """Run McStas simulation for given BEER modes and number of neutrons.
     
-    Parameters:
+    Parameters
     ----------
     modes: str or list
         List of ID's (or a single ID) for BEER modes to be simulated. 
+        The list can also be passed as a comma-separated string.
+        If modes not defined or equal 'all', run all pre-defined modes.
         The modes are defined in beer.modes.
-        Use beer.modes.listModes() to print a list.
-        Use beer.modes.getModeKeys() to get a list of ID's.
+        Use :func:`beer.modes.listModes` to print a list.
+        Use :func:`beer.modes.getModeKeys` to get a list of ID's.
     n: int
         Number of neutrons to run
     plot: boolean
@@ -157,10 +290,12 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, **kwargs):
     docompile: boolean
         Create and compile the instrument file (BEER_reference.instr)
         before simulation. Requires McStas installed and configured.
-        See mcstasConfigure().
+        See :func:`configure_mcstas`.
+    params
+        Instrument parameters.
         
-    Returns:
-    -------
+    Return
+    ------
     
     List of beer.mcplot.Data1D objects with results.
         
@@ -178,12 +313,12 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, **kwargs):
         
     if not _IS_MCSTAS_CONFIG:
         print('ERROR: workspace configuration failed?')
-        print('Try to run {}.mcstasConfig() again.'.format(fn))
+        print('Try to run {}.configure_mcstas() again.'.format(fn))
         return
 
     if docompile and (not _IS_MCSTAS):
         print('ERROR: McStas compiler configuration failed?')
-        print('Try to run {}.mcstasConfig() again.'.format(fn))
+        print('Try to run {}.configure_mcstas() again.'.format(fn))
         return
 
     if docompile:
@@ -199,14 +334,18 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, **kwargs):
 
     # define modes to run  
     modeid = ''
-    if not modes:
+    if not modes or modes =='all':
         modes = bmodes.getModeKeys()
-    elif isinstance(modes,str) and (not modes=='DS1'):
-        modeid = modes
+    elif isinstance(modes,str):
+        ms = modes.split(',')
+        if len(ms)>1:
+            modes = ms
+        else:
+           modeid = modes
     datas = None
     # execute simulation for a single mode:
     if modeid:
-        out = _exe.runSimulation(modeid, n=counts, **kwargs)
+        out = _exe.runSimulation(modeid, n=counts, **params)
         if out:
             # process output files and get a list of data objects
             datas = _exe.processRun(modeid)
@@ -218,7 +357,8 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, **kwargs):
 
     # execute simulation for multiple modes:
     else:
-        out = _exe.runModes(modes=modes, counts=counts, timeout=timeout)
+        out = _exe.runModes(modes=modes, counts=counts, timeout=timeout,
+                            **params)
         if out:
             # retrieve results:
             datas = _exe.processResults(modes)
@@ -228,4 +368,21 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, **kwargs):
         else:
             print('Simulation not completed.')
     return datas
+
+
+def plot_result(datas, title='McStas', pdf=''):
+    """Plot results retrieved by :func:`execute`.
+    
+    Parameters
+    ----------
+    datas: 
+        Result of :func:`execute`
+    title: str
+        Title to be shown on graph
+    pdf: str
+        File name to export (pdf format, without extension).
+        Leave empty to suppress file export.
+        
+    """
+    _exe.plotResults(datas, title=title, pdf=pdf)
 

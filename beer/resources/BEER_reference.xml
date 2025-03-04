@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<SIMRES version="6.5.4">
+<SIMRES version="6.5.5">
 <COMMANDS>
 	<COMMAND class="SAVE" id="SAVE" name="save configuration">
 		<FILE name="file name">default.xml</FILE>

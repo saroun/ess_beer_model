@@ -712,9 +712,10 @@ def processResults(results, dataname='Lmon.dat', parentdir='./', outfile='',
         scale factor to apply for y-values 
     """   
     out = "# ID\tintensity\terr\n"
-    fmt = "{}\t{:.3f}\t{:.3f}\n"
+    fmt = "{}\t{:.3g}\t{:.3g}\n"
     datas = []
     for fn in results:
+        fn = fn.strip()
         p = None
         try:
             if dformat=='mcstas':
