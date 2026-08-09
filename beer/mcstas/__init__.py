@@ -99,6 +99,7 @@ def configure_workspace(**kwargs):
     
     """
     _exe.setConfig(**kwargs)
+    _exe.createWorkspace() 
     
     
 def configure_mcstas(**kwargs):
@@ -182,7 +183,7 @@ def configure(version=3, PATH='', MCSTAS='', MCSTAS_CC='gcc',
 
 
 def create_instrument(version=None, template=None, instname='', inpath=None, 
-                      GPU=True, **options):
+                      outpath=None, GPU=True, **options):
     """Create McStas instrument file from a template.
     
     If not defined the template is derived from the instrument name. 
@@ -200,12 +201,14 @@ def create_instrument(version=None, template=None, instname='', inpath=None,
     template : str
         Template name. If not defined, derive one from the instrument name, 
         McStas version and the GPU value.
-    inpath : str
-        Path where to search for instrument template. If not defined, use
-        package resources.
     instname : str
         Instrument name (without instr extension). If empty, use the name 
         defined by :func:`configure_workspace`
+    inpath : str
+        Path where to search for instrument template. If not defined, use
+        package resources.
+    outpath : str
+        Path where to save the instrument file. If None, use the workspace setting. 
     GPU : bool
         Set true to use the template with GPU-related definitions
     """    
@@ -226,6 +229,7 @@ def create_instrument(version=None, template=None, instname='', inpath=None,
             template += '_GPU'
     _exe.createInstrument(template=template, 
                           inpath=inpath,
+                          outpath=outpath,
                           instname=instname,
                           **options)
 

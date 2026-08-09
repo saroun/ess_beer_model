@@ -97,7 +97,7 @@ def setMcStas(version=3, PATH='', MCSTAS='', MCSTAS_CC='gcc', MCSTAS_CFLAGS='-O2
         else:
             _MCSTAS_ENV['cmd'] = 'compile_v3.sh'
     
-    # Set environmentvalues from arguments if defined
+    # Set environment values from arguments if defined
     e = {}
     if PATH:
         if not os.path.isdir(PATH):
@@ -288,8 +288,9 @@ def createWorkspace():
                 raise Exception(e)
 
     # copy resource files to workspace
-    files = [_MCSTAS_ENV['cmd']]
-    copyResources(config['WORKPATH'], files=files)
+    if 'cmd' in _MCSTAS_ENV:
+        files = [_MCSTAS_ENV['cmd']]
+        copyResources(config['WORKPATH'], files=files)
         
 
 def setConfig(workpath='', instname='BEER_reference', outpath='out'):
@@ -323,13 +324,12 @@ def setConfig(workpath='', instname='BEER_reference', outpath='out'):
             _MCSTAS_OUT = os.path.normpath(os.path.join(_MCSTAS_PATH,outpath))
     if instname:
         _MCSTAS_INST = instname
-    # create workspace files and directories
-    createWorkspace()
+
 
 
 #%% Create instrument file and compile it
 
-def createInstrument(template='', inpath=None, instname='', 
+def createInstrument(template='', inpath=None, outpath=None, instname='', 
                      **options):
     """Create McStas instrument file from a template.
     
@@ -345,21 +345,28 @@ def createInstrument(template='', inpath=None, instname='',
     inpath: str
         path where to search for instrument template. If not defined, use
         package resources.
+    outpath : str
+        Path where to save the instrument file (must already exist). 
+        If None, use the workspace setting.
     instname : str
         Instrument name (without instr extension). If empty, use the name 
         defined by :func:`setConfig`
     """
     config = getConfig()
-    checkConfig(config)
+    
     if not template:
         template = config['INSTR']+'_3x_GPU'
     if not instname:
         instname = config['INSTR']
     else:
         setConfig(instname=instname)
+    if outpath is None:
+        outpath = config['WORKPATH']
+        checkConfig(config)
+
     BMC.parseTemplate(instname=instname, 
                   template=template,
-                  outpath=config['WORKPATH'], 
+                  outpath=outpath, 
                   inpath=inpath,
                   **options)
 

@@ -34,7 +34,10 @@ else:
 
 # Keep SIMRES project data as global variables
 # Must be defined by user calling setConfig() before running SIMRES
-_SIMRES_JAVA = os.environ['JRE']
+if 'JRE' in os.environ:
+    _SIMRES_JAVA = os.environ['JRE']
+else:
+    _SIMRES_JAVA = 'java'
 _SIMRES_WORKPATH = ''
 _SIMRES_CFG_FILE = 'BEER_reference.xml'
 _SIMRES_CFG_DIR = ''
@@ -235,7 +238,7 @@ def scriptAll(modes=[4],  ncnt=10000, lrange=[0.2, 10.2], misalign=0.02,
     return out
 
 
-def saveScript(mode, ncnt=None, outpath='', file=None):
+def saveScript(mode, ncnt=None, outpath='', file=None, **kwargs):
     """
     Save a SIMRES script for simulation of given reference mode,
     using the function ``scriptAll``. 
@@ -252,6 +255,8 @@ def saveScript(mode, ncnt=None, outpath='', file=None):
         Output file name. If empty, the name is generated from 
         the mode ID, for example 'F0.inp' for mode F0. If None, then no script
         is saved.
+    kwargs : dict
+        Arguments passed to beer.simres.run.scriptAll().
     
     Returns:
     --------
@@ -288,9 +293,10 @@ def saveScript(mode, ncnt=None, outpath='', file=None):
         fname = file
     
     if fname:
-        inp = scriptAll(modes=modes, ncnt=ncnt, file=os.path.join(outpath,fname))
+        inp = scriptAll(modes=modes, ncnt=ncnt, 
+                        file=os.path.join(outpath,fname),**kwargs)
     else:
-        inp = scriptAll(modes=modes, ncnt=ncnt, file='')
+        inp = scriptAll(modes=modes, ncnt=ncnt, file='', **kwargs)
     res = {'modeid': modeid, 'scrname':fname, 'script': inp}
     return res
 

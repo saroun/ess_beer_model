@@ -7,9 +7,9 @@
 * Written by: Jan Saroun (saroun@ujf.cas.cz)
 * Date: 15/2/2017
 * Origin: Nuclear Physics Institute, CAS, Rez
-* Release: McStas 3.5.1
+* Release: McStas 3.6.8
 * Version: 1.9
-* Updated: 2025-02-18
+* Updated: 2026-08-08
 * %INSTRUMENT_SITE: ESS
 *
 * Diffractometer BEER, primary part, butterfly moderator
@@ -36,13 +36,17 @@
 * npulse: [] Pulse number to focus at. 
 * misfit_h: [m] Random misfit of guide elements, horizontal 
 * misfit_v: [m] Random misfit of guide elements, vertical
+* s3w: [m] Sample slit width. If zero, use instrument default.
+* s3h: [m] Sample slit height. If zero, use instrument default.
+* s3dist: [m] Sample slit distance from the sample. If zero, use instrument default.
 * monoutputs: [] Set to 0 to skip showing monitor data except of BM1, BM2 and BM3
 * %Link
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT @NAME(int mode=0, lambda=0, int verbose=0, int npulse=0, misfit_h=2e-5, misfit_v=1e-4, int monoutputs=1)
+DEFINE INSTRUMENT @NAME(int mode=0, lambda=0, int verbose=0, int npulse=0, misfit_h=2e-5, misfit_v=1e-4, 
+s3w=0.0, s3h=0.0, s3dist=0.0, int monoutputs=1)
 
 DECLARE
 
@@ -59,9 +63,6 @@ double tth=90; // [deg] detector take-off angle
 double Lmin=0.2; // [AA] Minimum wavelength for neutron generation
 double  Lmax=10.2; // Lmax: [AA] Maximum wavelength for neutron generation
 int nframes=1; // Number of source pulses.
-double  s3w=0.0;  // [m] Sample slit width. If zero, use instrument default.
-double s3h=0.0; // m] Sample slit height. If zero, use instrument default.
-double s3dist=0.05; // [m] Sample slit distance from the sample. If zero, use instrument default.
 int bs_on=1; // Sets the bi-spectral switch blades on (1) or off (0)
 
 
@@ -547,7 +548,7 @@ They are defined by mode setting,  see setMode()
 
 // moderator -> pulse chopper distance
    double Lchopper; 
-// Exchanger switcch on/off   
+// Exchanger switch on/off   
    int GF3On;
 #pragma acc declare create(GF3On)
 
@@ -685,9 +686,9 @@ lam0 = nominal wavelength for chopper phase calculation
             } else if ( (fabs(PSC3.nu)<=eps) &&  (fabs(PSC1.nu)>eps) && (fabs(PSC2.nu)>eps)) {
                 L0 = 0.5*(PSC1.dist+PSC2.dist);
                 dL = PSC2.dist - PSC1.dist;
-            } else if ( (fabs(PSC2.nu)<=eps) &&  (fabs(PSC1.nu)>eps) && (fabs(PSC3.nu)>eps)) {
+            } else if ( (fabs(PSC1.nu)<=eps) &&  (fabs(PSC2.nu)>eps) && (fabs(PSC3.nu)>eps)) {
                L0 = 0.5*(PSC2.dist+PSC3.dist);
-               dL = PSC2.dist - PSC1.dist;
+               dL = PSC3.dist - PSC2.dist;
             } else {
                 printf("Wrong setting: PSC choppers must be used in pairs.");
                 exit(0);
@@ -702,13 +703,13 @@ lam0 = nominal wavelength for chopper phase calculation
                 foc_dt = 0;
                 foc_pls = 0;
             }
-        } else if (mc == 4 || mc == 5 || mc == 6) {
+        } else if (mc == 4 || mc == 5 || mc == 6 || mc == 8) {
             if ((fabs(MCA.nu)>eps) && (fabs(MCB.nu)>eps)) {
                 L0 = 0.5*(MCA.dist + MCB.dist);
             } else if (fabs(MCA.nu)>eps) {
-                L0 = 0.5*MCA.dist;
+                L0 = MCA.dist;
             } else if (fabs(MCB.nu)>eps) {
-                L0 = 0.5*MCB.dist;
+                L0 = MCB.dist;
             } else {
                 printf("Wrong modulation mode: At least one MC chopper must rotate.");
                 exit(0);
@@ -748,13 +749,11 @@ lam0 = nominal wavelength for chopper phase calculation
    
 /* reporting functions */   
    void reportTSlit(char* name, TSlit F) {
-		printf("%s: dist=%g, w=%g, h=%g\n",name,
-		F.dist, F.w, F.h);   
+		printf("%s: dist=%g, w=%g, h=%g\n",name, F.dist, F.w, F.h);   
 	};
     
    void reportTArm(char* name, TArm F) {
-		printf("%s: dist=%g, x=%g, angle=%g\n",name,
-		F.dist, F.shift, F.angle);   
+		printf("%s: dist=%g, x=%g, angle=%g\n",name, F.dist, F.shift, F.angle);   
 	};
     
 	void reportTGuide(char* name, TGuide F) {

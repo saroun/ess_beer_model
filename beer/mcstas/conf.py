@@ -1632,7 +1632,7 @@ def modesSlits(indent):
     return out
 
 def modesGEX1(indent):
-    out = '\n// Define focusingg guide setting [on/off]  \n'
+    out = '\n// Define focusing guide setting [on/off]  \n'
     out += indent+'int mod_GF3[] = {'+BM.getGEXStr() + '};\n' 
     return out
 

@@ -19,7 +19,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='beer',
-    version='1.9.0',
+    version='1.9.1',
     description='Neutron optics model for the diffractometer BEER at ESS',
     long_description = long_description,
     long_description_content_type='text/markdown',
