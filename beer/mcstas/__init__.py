@@ -135,8 +135,8 @@ def verify_workspace():
     _IS_MCSTAS = _exe.verifyMcStas()
     
     
-def configure(version=3, PATH='', MCSTAS='', MCSTAS_CC='gcc', 
-              MCSTAS_CFLAGS='-O2', workpath='', instname='BEER_reference', 
+def configure(version=3, PATH='', MCSTAS='', MCSTAS_CC='', 
+              MCSTAS_CFLAGS='', workpath='', instname='BEER_reference', 
               outpath='out'):
     """Configure the instrument project workspace and McStas compiler.
     
@@ -234,7 +234,7 @@ def create_instrument(version=None, template=None, instname='', inpath=None,
                           **options)
 
 
-def compile_instrument(force=False):
+def compile_instrument(force=False, mpi=0):
     """Compile default instrument file.
     
     Parameters
@@ -270,12 +270,12 @@ def compile_instrument(force=False):
         print('Try to run {}.configure() again.'.format(fn))
         return
 
-    out = _exe.compileInstrument(verify=False)
+    out = _exe.compileInstrument(mpi=mpi, verify=False)
     if not out:
         print('WARNING: could not compile instrument file')
     
 
-def execute(modes=None, n=1e5, plot=False, docompile=False, **params):
+def execute(modes=None, n=1e5, plot=False, docompile=False, mpi=0, **params):
     """Run McStas simulation for given BEER modes and number of neutrons.
     
     Parameters
@@ -327,7 +327,7 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, **params):
 
     if docompile:
         # compile
-        out = _exe.compileInstrument(statinfo=False, shielding=False, 
+        out = _exe.compileInstrument(mpi=mpi, statinfo=False, shielding=False, 
                                       verify=False)
         if not out:
             print('WARNING: could not compile instrument file.')
@@ -349,7 +349,7 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, **params):
     datas = None
     # execute simulation for a single mode:
     if modeid:
-        out = _exe.runSimulation(modeid, n=counts, **params)
+        out = _exe.runSimulation(modeid, mpi=mpi, n=counts, **params)
         if out:
             # process output files and get a list of data objects
             datas = _exe.processRun(modeid)

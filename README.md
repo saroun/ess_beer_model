@@ -101,24 +101,12 @@ or use the beer.mcstas package:
     # to replot results:  
     mcstas.plot_result(result, title='Test simulation', pdf='myresult')
 
-    # create instrument file 
-    mcstas.create_instrument()
-
-    # compile instrument file
-    mcstas.compile_instrument(force=True)
-
-    # run simulation for one modes
-    result = mcstas.execute(modes='PS2', n=1e7, plot=True)
-
     # or run simulation for selected modes
     result = mcstas.execute(modes='F0,F1', n=1e6, plot=True)
 
     # or run simulation for all modes 
     import beer.modes as bmodes
     result = mcstas.execute(modes=bmodes.getModeKeys(), n=1e7, plot=True)
-
-    # to replot results:  
-    mcstas.plot_result(result, title='Test simulation', pdf='myresult')
 
     # Simulation using an instrument template provided by user
     mcstas.create_instrument(template='BEER_user', 

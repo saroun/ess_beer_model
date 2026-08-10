@@ -65,7 +65,7 @@ def updatePath():
             os.environ['PATH'] = sep.join([mcstas['PATH'],path])
 
 
-def setMcStas(version=3, PATH='', MCSTAS='', MCSTAS_CC='gcc', MCSTAS_CFLAGS='-O2'):
+def setMcStas(version=3, PATH='', MCSTAS='', MCSTAS_CC='', MCSTAS_CFLAGS=''):
     r"""Set environment for McStas.
     
     Leave argument(s) empty if you have defined them as environment variables. 
@@ -371,7 +371,7 @@ def createInstrument(template='', inpath=None, outpath=None, instname='',
                   **options)
 
 
-def compileInstrument(verify=True):
+def compileInstrument(mpi=0, verify=True):
     """
     Attempts to compile instrument file specified in config.
     No validation of McStas compiler is done. It is assumed that
@@ -393,13 +393,11 @@ def compileInstrument(verify=True):
         env = os.environ
     else:
         # Set environment
+        # Set and check environment variables
         env = os.environ
-        if 'MCSTAS' in mcstas:
-            env['MCSTAS'] = mcstas['MCSTAS']
-        if 'MCSTAS_CC' in mcstas:
-            env['MCSTAS_CC'] = mcstas['MCSTAS_CC']
-        if 'MCSTAS_CFLAGS' in mcstas:
-            env['MCSTAS_CFLAGS'] = mcstas['MCSTAS_CFLAGS'] 
+        for v in ['MCSTAS','MCSTAS_CC','MCSTAS_CFLAGS']:
+            if v in mcstas:
+                env[v] = mcstas[v]
     
     # check that there is instr file to compile
     config = getConfig()
@@ -419,12 +417,20 @@ def compileInstrument(verify=True):
         fc = os.path.join(config['WORKPATH'],config['INSTR']+'.c')
         if os.path.isfile(fc):
             os.remove(fc)
+        
+        """
         if 'SHELL' in env:
             cmd = [env['SHELL']]
         else:
             cmd = []
         cmd = cmd + [mcstas['cmd'], config['INSTR']]
+        """
         
+        cmd = ['mcrun','-c']
+        if mpi:
+            cmd.append('--mpi={}'.format(mpi))
+        cmd.append(config['INSTR']+'.instr')
+        cmd.append('-n0') # suppress running, just compile
         # join into one command string - lists may not run on Linux ...
         cmd = ' '.join(cmd)
         print('Command: '+cmd)
@@ -502,7 +508,7 @@ def verifyMcStas(verbose=1):
     """
     Check McStas compiler environment. Use setMcStas() to define it.
     
-    Call testMcStas() always before trying to run McStas using this package.
+    Call verifyMcStas() always before trying to run McStas using this package.
             
     Returns:
     --------
@@ -540,17 +546,16 @@ def verifyMcStas(verbose=1):
             traceback.print_exc(file=sys.stdout)
         return q
     
+    """    
     mcstas = getMcStas()
     config = getConfig()
     
-    # Set and check environment
+
+    # Set and check environment variables
     env = os.environ
-    if 'MCSTAS' in mcstas:
-        env['MCSTAS'] = mcstas['MCSTAS']
-    if 'MCSTAS_CC' in mcstas:
-        env['MCSTAS_CC'] = mcstas['MCSTAS_CC']
-    if 'MCSTAS_CFLAGS' in mcstas:
-        env['MCSTAS_CFLAGS'] = mcstas['MCSTAS_CFLAGS']
+    for v in ['MCSTAS','MCSTAS_CC','MCSTAS_CFLAGS']:
+        if v in mcstas:
+            env[v] = mcstas[v]
 
     msgs = ''
     if not (('MCSTAS' in env) and ('MCSTAS_CC' in env)) :
@@ -567,16 +572,18 @@ def verifyMcStas(verbose=1):
     if msgs: 
         print(msgs)
         return False 
+    
+    """
     # update PATH variable
     updatePath()
     # Verify that mcstas can be executed
     res1 = testExe(['mcstas', '--version'])    
     # Verify that C compiler can be executed
-    res2 = testExe([mcstas['MCSTAS_CC'], '--version'])
+    res2 = testExe(['mcrun', '--version'])
     return res1 and res2
 
 
-def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600, 
+def runSimulation(mode, n=10000, mpi=0, verbose=1, npulse=0, timeout=600, 
                   outdir=None, quiet=False, **kwargs):
     """
     Run McStas simulation with given parameters. Optinally plot results.
@@ -635,13 +642,19 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
         respath = outname
         
     # set up command parameters
-    sn = '{:d}'.format(int(n))
+    sn = '-n{:d}'.format(int(n))
     smode = 'mode={:d}'.format(imode)
     snpls = 'npulse={:d}'.format(npulse)
     sv = 'verbose={:d}'.format(int(max(0,verbose)))
-    
-    ename = os.path.join('.',config['EXE'])
-    cmd = [ename,'-n', sn, smode, sv, snpls]
+   
+   # ename = os.path.join('.',config['EXE'])
+   
+    cmd = ['mcrun']
+    if mpi:
+        cmd.append('--mpi={}'.format(mpi))
+    cmd.append(config['INSTR']+'.instr')
+
+    cmd += [sn, smode, sv, snpls]
     for key in kwargs:
         cmd += ['{}={}'.format(key, kwargs[key])]
     cmd += ['-d', respath]

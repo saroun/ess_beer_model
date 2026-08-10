@@ -921,7 +921,7 @@ def cfgComponent(comp, indent='    '):
             fmt = '{}writeTaperingFile("{}", {}, {:d}, {}, &{});\n'
             out += fmt.format(indent, ell['file'], ell['ID'], ell['dir'], info['start'], ID)
             out += indent+');\n'
-            fmt = r'{}if (verbose) printf("%s: shift=%g [mm], angle = %g [deg]\n","{}",{}.shift*1000,{}.angle);'
+            fmt = r'{}if (verbose) MPI_MASTER(printf("%s: shift=%g [mm], angle = %g [deg]\n","{}",{}.shift*1000,{}.angle));'
             out += fmt.format(indent, ID, ID, ID) +'\n'
         return out
     
@@ -1793,7 +1793,7 @@ def get_instr_file(instname='BEER_reference', template='BEER_reference_v3_GPU',
     return out
  
 
-def parseTemplate(instname='BEER_reference', template='BEER_reference_v2', 
+def parseTemplate(instname='BEER_reference', template='BEER_reference_v3', 
                   outpath='', **options):
     """Create McStas instrument file, using provided template.
             

@@ -325,7 +325,7 @@ def modes2str():
     return out
 
 def getSlitStr(ID, dim=0):
-    inf = [40, 80]
+    inf = [80, 80]
     n = len(modes)
     fmt = '{:.1f}, '*(n-1)+'{:.1f}'
     val = np.zeros(n)
