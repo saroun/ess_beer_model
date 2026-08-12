@@ -127,7 +127,7 @@ def update(scriptonly=False):
     _exe.runSetup(verify=not scriptonly, run_setup=not scriptonly)
     
     
-def execute(modes=None, n=10000, plot=False, runsetup=False):
+def execute(modes=None, n=10000, plot=False, runsetup=False, **kwargs):
     """
     Run simulation using SIMRES for given BEER modes and number of neutrons.
     simresConfig() must be executed before simresRun().
@@ -141,11 +141,14 @@ def execute(modes=None, n=10000, plot=False, runsetup=False):
         Use beer.modes.getModeKeys() to get a list of ID's.
     n: int
         Number of neutrons to run
-    plot: boolean
-        Plot results after simulation.
+    plot: boolean or str
+        Plot results after simulation. 
     runsetup: boolean
         Create and run input script for updating BEER instrument configuration
         according to actual beam geometry definition.
+    kwargs : dict
+        Arguments passed to beer.simres.run.scriptAll(). Allows to set
+        non-default waviness and misalignment values.
     
     Returns:
     -------
@@ -194,17 +197,18 @@ def execute(modes=None, n=10000, plot=False, runsetup=False):
         if len(ms)>1:
             modes = ms
         else:
-           modeid = modes
+           modeid = modes.strip()
     elif len(modes)==1:
-        modeid = modes[0]
-
+        modeid = modes[0].strip()
+    
     # execute simulation for a single mode:
     if modeid:
         print('\nStaring simulation for {}'.format(modeid))    
         downmodes = ['F0', 'F1']
         up = not (modeid in downmodes)
         # execute simulation:
-        out = _exe.runSimulation(modeid, ncnt=counts, upstream=up, timeout=timeout)
+        out = _exe.runSimulation(modeid, ncnt=counts, upstream=up, 
+                                 timeout=timeout, **kwargs)
         if out:
             # process output files and get a list of data objects
             datas = _exe.processRun(modeid) 
@@ -219,13 +223,20 @@ def execute(modes=None, n=10000, plot=False, runsetup=False):
         print('\nStaring simulation for {}'.format(','.join(modes)))
         # execute simulation:
         out = _exe.runModes(modes=modes, counts=counts, timeout=timeout, 
-                              verify=False)
+                              verify=False,**kwargs)
         if out:
             # retrieve results:
             datas = _exe.processResults(modes)
             # plot the retrieved results:
             if plot:
-                _exe.plotResults(datas, title='SIMRES', pdf='results')
+                if isinstance(plot, str):
+                    fout = plot
+                else:
+                    fout = 'results'
+                try:
+                    _exe.plotResults(datas, title='SIMRES', pdf=fout)
+                except Exception as e:
+                    print(e)
         else:
             print('Simulation not completed.')
     return datas

@@ -482,7 +482,7 @@ def setMisalignment(d=0.02, guides=[]):
     guides: list
         list of guides id to be set. If empty, set all choppers of BEER
     """
-    out = setHeader('Set misalignment {:g} mm'.format(d))
+    out = setHeader('Set misalignment {} mm'.format(d))
     if len(guides)==0:
         lst = BC.BEER.keys()
     else:
@@ -490,7 +490,10 @@ def setMisalignment(d=0.02, guides=[]):
     for key in lst:
         comp = BC.BEER[key]
         if comp['type'] == 'optics':
-            out += 'SET {} MISALIGN {:g} {:g}\n'.format(key, d, d)
+            if isinstance(d, list):
+                out += 'SET {} MISALIGN {:g} {:g}\n'.format(key, *d)
+            else:
+                out += 'SET {} MISALIGN {:g} {:g}\n'.format(key, d, d)
     return out
 
 def setWaviness(w=0.2, guides=[]):

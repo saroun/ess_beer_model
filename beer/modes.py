@@ -128,7 +128,7 @@ def getModeIndex(ID):
     i = 0
     while i<len(modes):
         mod = modes[i]
-        if mod['ID'] == ID:
+        if mod['ID'] == ID.strip():
             out = i
             break
         i += 1

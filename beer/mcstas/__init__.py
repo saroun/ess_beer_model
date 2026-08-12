@@ -366,9 +366,15 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, mpi=0, **params):
         if out:
             # retrieve results:
             datas = _exe.processResults(modes)
-            # plot the retrieved results:
             if plot:
-                _exe.plotResults(datas, title='McStas', pdf='results')
+                if isinstance(plot, str):
+                    fout = plot
+                else:
+                    fout = 'results'
+                try:
+                    _exe.plotResults(datas, title='McStas', pdf=fout)
+                except Exception as e:
+                    print(e)
         else:
             print('Simulation not completed.')
     return datas
