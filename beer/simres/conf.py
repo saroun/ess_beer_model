@@ -41,7 +41,7 @@ deg = np.pi/180;
 # instrument and source component names
 _INST = 'INST'
 _SOURCE = 'SOURCE'
-
+_seg_exchanger = [367, 250, 250, 250, 250, 200, 200, 100]
 
 key0 = 'GT1'
 key1 = 'FC2A'
@@ -125,9 +125,12 @@ def infoSegments(key, seg=500., segm=None, gap=0.2):
     for i in range(nseg):
         Lseg = sg[i]
         x += Lseg
-        p = BG.beamSize(x1 + x,coord='ISCS').reshape((6,))
-        w = p[4]
-        h = p[5]
+        if comp['const']:
+            w,h = comp['entry']
+        else:
+            p = BG.beamSize(x1 + x,coord='ISCS').reshape((6,))
+            w = p[4]
+            h = p[5]
         z = Lseg
         if (i==0 or i==nseg-1):
             z -= 0.5*gap
@@ -225,6 +228,24 @@ def cfgSGUIDE(key, seg = 500., segm = None,  key0=None, isTilted=False):
     out += 'XML {}\n'.format(ID)
     return out   
 
+def switchExchanger(on=True):
+    ID = 'GEX1'
+    if on:
+        info = infoSGUIDE(ID, seg = _seg_exchanger)
+    else:
+        info = infoSGUIDE('GEX2', seg = _seg_exchanger)
+    sgm = info['sgm']
+    nseg = len(sgm)
+    # set segments data
+    fmt = 'SET {} SEG({}) {}\n'
+    out = '# Switch exchanger\n'
+    for i in range(nseg):
+        out += fmt.format(ID, i+1, sgm[i]) 
+    out += 'XML {}\n'.format(ID)
+    return out
+        
+    
+    
 
 def cfgGUIDE(key, key0=None, isTilted=False):
     info = infoGUIDE(key, key0=key0)
@@ -368,8 +389,7 @@ def cfgFocusingSection():
     out += cfgSGUIDE('GF2', seg = seg, segm = segm, key0='SL1')
     out += cfgDist('SL2', key0='GF2')
     out += cfgGUIDE('GMINI', key0='SL2')
-    seg=[367, 250, 250, 250, 250, 200, 200, 100]
-    out += cfgSGUIDE('GEX1', seg = seg, key0='GMINI')
+    out += cfgSGUIDE('GEX1', seg = _seg_exchanger, key0='GMINI')
     out += cfgDist('SL3', key0='GEX1')
     out += '\n'
     return out
@@ -601,10 +621,22 @@ def setSlits(imode):
         if sz[1]==0:
             sz[1]=100
         out += setSlit(s, size=sz)
-    gex = '# # # #'.replace('#', str(BMOD.modes[imode]['GEX1']))
-    out += 'set GEX1 ACTIVE {}\n'.format(gex)
-    out += 'XML GEX1\n'
+    #gex = '# # # #'.replace('#', str(BMOD.modes[imode]['GEX1']))
+    #out += 'set GEX1 ACTIVE {}\n'.format(gex)
+    #out += 'XML GEX1\n'
     return out
+
+def setExchanger(imode):
+    """Switch Exchanger on or off."""
+    gex = BMOD.modes[imode]['GEX1']
+    if not gex:
+        out = setHeader('Setting exchanger as collimator')
+        out += switchExchanger(on=False)
+    else:
+        out = setHeader('Setting exchanger as focusing guide')
+        out += switchExchanger(on=True)
+    return out
+        
 
 
 def setMode0():
@@ -621,6 +653,7 @@ def setMode0():
     for key in wchoppers:
         out += setChopperOff(key)
     out += setSlits(0)
+    out += setExchanger(0)
     return out
 
 
@@ -824,6 +857,7 @@ def scriptMode(imode, ncnt=10000, lrange=[0.2, 10.2], exe=True,
         out += adjWavelength(imode, lrange=lrange )
         out += setPSCdist(imode)
         out += setSlits(imode)
+        out += setExchanger(imode)
     else:
         out += setMode0()
     if exe:

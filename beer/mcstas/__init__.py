@@ -275,7 +275,8 @@ def compile_instrument(force=False, mpi=0):
         print('WARNING: could not compile instrument file')
     
 
-def execute(modes=None, n=1e5, plot=False, docompile=False, mpi=0, **params):
+def execute(modes=None, n=1e5, plot=False, docompile=False, mpi=0, quiet=False, 
+            **params):
     """Run McStas simulation for given BEER modes and number of neutrons.
     
     Parameters
@@ -349,7 +350,7 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, mpi=0, **params):
     datas = None
     # execute simulation for a single mode:
     if modeid:
-        out = _exe.runSimulation(modeid, mpi=mpi, n=counts, **params)
+        out = _exe.runSimulation(modeid, mpi=mpi, n=counts, quiet=quiet, **params)
         if out:
             # process output files and get a list of data objects
             datas = _exe.processRun(modeid)

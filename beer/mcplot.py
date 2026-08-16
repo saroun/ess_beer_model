@@ -556,7 +556,7 @@ def parseFileSIMRES2D(fname, zscale=1):
 
 #%% Functions operating on Data1D objects
 
-def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True, grid=None):
+def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True, grid=None, fontsize=10):
     """Plot given data (class Data1D) on provided axis.
      
     Optionally, scale the x,y axes by provided factors (xscale, yscale).
@@ -578,8 +578,8 @@ def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True, grid=None):
         :meth:`~matplotlib.pyplot.Axes.grid` method.
         
     """
-    MEDIUM_SIZE = 10
-    BIGGER_SIZE = 12 
+    MEDIUM_SIZE = fontsize
+    BIGGER_SIZE = fontsize+2 
     
     # table for special character replacement, PGPLOT -> LaTeX
     reptable = {'@@d(.*)@@u':'_{\\1}',
@@ -661,7 +661,7 @@ def plot1D(ax, dset, xscale=1, yscale=1, showvalue=True, grid=None):
                     yerr=ebar,
                     label=dd.legend)
     if dd.legend:
-        ax.legend()
+        ax.legend(fontsize=MEDIUM_SIZE)
 
 #%% Top level functions for simulation results processing
 
@@ -782,14 +782,14 @@ def processRun(dirname, files=['Lmon.dat', 'TofMon.dat'], parentdir='./',
     return datas
 
 
-def plotDataSet(datas, title='', pdf='',  **kwargs):
+def plotDataSet(datas, title='', pdf='', size=[6,4], **kwargs):
     """Plot a set of data given as a list of Data1D objects.
     
     Parameters
     ----------
     datas: list
         list of data objects for 1-dim monitors.
-        If the list items are Data1D objects, then each bo contains just one 
+        If the list items are Data1D objects, then each plot contains just one 
         curve.
         If the list items are lists of Data1D, then each box
         will plot all curves defined by these Data1D items.
@@ -805,8 +805,7 @@ def plotDataSet(datas, title='', pdf='',  **kwargs):
     if len(datas)<=0:
         print('Nothing to plot')
         return
-    xwidth = 6
-    yheight = 4
+    xwidth,yheight = size
     nf = len(datas)
     nc = min(2,nf)
     nr = int(nf/2-0.001)+1

@@ -39,7 +39,7 @@ _MCSTAS_OUT = './'
 # name of the compiled McStas instrument executable  
 _MCSTAS_INST = 'BEER_reference'
 
-_OUTFILES = ['Lmon.dat', 'TofMon.dat', 'HDivMon.dat', 'VDivMon.dat', 'XMon.dat', 'YMon.dat']
+_OUTFILES = ['XMon.dat', 'YMon.dat', 'HDivMon.dat', 'VDivMon.dat', 'Lmon.dat', 'TofMon.dat' ]
 
 # environment variables for mcstas compiler
 _MCSTAS_ENV = {}

@@ -574,8 +574,9 @@ def defineComponents():
     BEER['W16'] = window('W16', 155125.5)
     BEER['GEX1'] =  guide('20-01', 155133.0, 157000.0, 
         'Focusing guide on exchanger', m=[0., 0., 5., 5.], gv=B.E3)
-    BEER['GEX2'] =  guide('20-02', 155133.001, 157000.0, 
-        'Collimator on exchanger', m=[0., 0., 0., 0.], const = True, wentry=[40., 50.])
+    BEER['GEX2'] =  guide('20-02', 155133.0, 157000.0, 
+        'Collimator on exchanger', m=[0., 0., 0., 0.], const = True, 
+        wentry=[40., 50.], wexit=[40., 50.])
     BEER['W17'] = window('W17', BEER['GEX2']['end'] + go)
     
     # Input slit
