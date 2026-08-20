@@ -1104,7 +1104,7 @@ def compCollimator(info, relto='ISCS'):
     ID = info['ID']
     tab = '\t'
     out = 'COMPONENT c{} = {}(\n'.format(ID,getMcStasComp(TCollimator))
-    fmt = 'length = @C.L, xwidth = @C.w1, yheight = @C.h1\n'
+    fmt = 'length = @C.L, xwidth = @C.w1, yheight = @C.h1, divergence = 0\n'
     out += tab+fmt.replace('@C',ID)
     out += ')\n'
     out += compPosition(ID,relto=relto)
