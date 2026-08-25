@@ -584,7 +584,7 @@ def verifyMcStas(verbose=1):
 
 
 def runSimulation(mode, n=10000, mpi=0, verbose=1, npulse=0, timeout=600, 
-                  outdir=None, quiet=False, **kwargs):
+                  outdir=None, quiet=False, **params):
     """
     Run McStas simulation with given parameters. Optinally plot results.
     
@@ -594,6 +594,8 @@ def runSimulation(mode, n=10000, mpi=0, verbose=1, npulse=0, timeout=600,
         BEER reference mode index or ID
     n: int
         Number of neutrons to run
+    mpi : int
+        Number of CPU cores for MPI mode
     verbose: int
         `verbose` parameter passed to McStas instrument file
     npulse: int
@@ -603,6 +605,8 @@ def runSimulation(mode, n=10000, mpi=0, verbose=1, npulse=0, timeout=600,
     outdir: str
         McStas output directory, relative to config['OUTPATH'].
         If not provided, mode ID string is used.
+    params
+        Instrument parameters.
     """
     # verify configuration
     if not verifyConfig(verbose=not quiet):
@@ -655,8 +659,8 @@ def runSimulation(mode, n=10000, mpi=0, verbose=1, npulse=0, timeout=600,
     cmd.append(config['INSTR']+'.instr')
 
     cmd += [sn, smode, sv, snpls]
-    for key in kwargs:
-        cmd += ['{}={}'.format(key, kwargs[key])]
+    for key in params:
+        cmd += ['{}={}'.format(key, params[key])]
     cmd += ['-d', respath]
     # clean output path if exists
     if os.path.exists(outname):
@@ -704,7 +708,7 @@ def runSimulation(mode, n=10000, mpi=0, verbose=1, npulse=0, timeout=600,
     return res                            
 
 
-def runModes(modes=[], counts=1e6, timeout=3600, **kwargs):
+def runModes(modes=[], counts=1e6, mpi=0, timeout=3600, **kwargs):
     
     """
     Run simulations for selected BEER reference modes.
@@ -712,9 +716,11 @@ def runModes(modes=[], counts=1e6, timeout=3600, **kwargs):
     Parameters:
     -----------
     modes: list
-        List of mode ID's
+        List of mode ID's       
     counts: int
         Number of neutrons to trace.
+    mpi : int
+        Number of CPU cores for MPI mode
     timeout: int
         Timeout in sec for one simulation
     
@@ -752,7 +758,7 @@ def runModes(modes=[], counts=1e6, timeout=3600, **kwargs):
         imode = BMOD.getModeIndex(sm[0])
         if (imode>=0):
             try:
-                res = res and runSimulation(sm[0], n=counts, npulse=npls, 
+                res = res and runSimulation(sm[0], n=counts, mpi=mpi, npulse=npls, 
                                   timeout=timeout, outdir=m, quiet=True, **kwargs)
             except Exception as e:
                 print(e)

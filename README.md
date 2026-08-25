@@ -4,7 +4,7 @@ Neutron optics model for the diffractometer BEER at the European Spallation Sour
 Author: Jan Saroun, saroun@ujf.cas.cz  
 Copyright (c) 2020 Nuclear Physics Institute, CAS, Rez, http://www.ujf.cas.cz
 
-Repository: https://bitbucket.org/saroun/beer_optics 
+Repository: https://github.com/saroun/ess_beer_model
 
 ## Summary
 
@@ -24,11 +24,21 @@ SIMRES: https://github.com/saroun/simres
 
 ## Quick guide
 
-Install:
+### Install:
 
     # from root package directory call
     pip install -e .
     # check pip docs for other ways of installation
+
+### Jupyter notebook:
+
+Examples of basic usage and simulations of the primary instrument are provided in Jupter notebook files:
+
+- [ess_beer_model.ipynb](ess_beer_model.ipynb)
+- [ess_beer_simulation.ipynb](ess_beer_simulation.ipynb)
+
+
+### Python scripts:
 
 Get beam axis, beam size and coordinate conversions:
 
@@ -135,7 +145,7 @@ or use the beer.simres package:
     import beer.modes as bmodes
 
     # Configure environment to define workspace directory.
-    # Optionally, you van also set `java` path and `simresdir` to define the 
+    # Optionally, you can also set `java` path and `simresdir` to define the 
     # JRE interpreter and SIMRES installation directory, respectively.
     simres.configure(workpath='my_path')
 

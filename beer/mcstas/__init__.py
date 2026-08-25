@@ -296,6 +296,8 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, mpi=0, quiet=False,
         Create and compile the instrument file (BEER_reference.instr)
         before simulation. Requires McStas installed and configured.
         See :func:`configure_mcstas`.
+    mpi : int
+        Number of CPU cores for MPI mode.
     params
         Instrument parameters.
         
@@ -362,7 +364,7 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, mpi=0, quiet=False,
 
     # execute simulation for multiple modes:
     else:
-        out = _exe.runModes(modes=modes, counts=counts, timeout=timeout,
+        out = _exe.runModes(modes=modes, mpi=mpi, counts=counts, timeout=timeout,
                             **params)
         if out:
             # retrieve results:
