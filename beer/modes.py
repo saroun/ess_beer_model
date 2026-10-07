@@ -128,7 +128,7 @@ def getModeIndex(ID):
     i = 0
     while i<len(modes):
         mod = modes[i]
-        if mod['ID'] == ID:
+        if mod['ID'] == ID.strip():
             out = i
             break
         i += 1
@@ -147,12 +147,12 @@ def getModeKeys():
 i = 0
 modes[i] = defMode(
         ID=['F0', 'Maximum white beam', 'never used in experiment'],
-        slits=[[100,100], [0,0], [0,0]], foc=1, lam=2.1, cm=[0, 0]
+        slits=[[0,0], [0,0], [0,0]], foc=1, lam=2.1, cm=[0, 0]
         )
 i += 1
 modes[i] = defMode(
         ID=['F1', 'Accident full beam', 'F0 with FC choppers running'],
-        slits=[[100,100], [0,0], [0,0]], foc=1, lam=3.1, cm=[0, 4]
+        slits=[[0,0], [0,0], [0,0]], foc=1, lam=3.1, cm=[0, 4]
         )
 i += 1
 modes[i] = defMode(
@@ -325,7 +325,7 @@ def modes2str():
     return out
 
 def getSlitStr(ID, dim=0):
-    inf = [40, 80]
+    inf = [80, 80]
     n = len(modes)
     fmt = '{:.1f}, '*(n-1)+'{:.1f}'
     val = np.zeros(n)
@@ -559,7 +559,7 @@ def chopperset(imode=0):
     choppers = []
     frc = cm[1:] # frequencies
     frc.extend(wm[1:])
-    phi = cp # phases
+    phi = cp.copy() # phases
     phi.extend(wp) 
     for i in range(len(frc)):
         f = frc[i]

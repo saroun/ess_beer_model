@@ -921,7 +921,7 @@ def cfgComponent(comp, indent='    '):
             fmt = '{}writeTaperingFile("{}", {}, {:d}, {}, &{});\n'
             out += fmt.format(indent, ell['file'], ell['ID'], ell['dir'], info['start'], ID)
             out += indent+');\n'
-            fmt = r'{}if (verbose) printf("%s: shift=%g [mm], angle = %g [deg]\n","{}",{}.shift*1000,{}.angle);'
+            fmt = r'{}if (verbose) MPI_MASTER(printf("%s: shift=%g [mm], angle = %g [deg]\n","{}",{}.shift*1000,{}.angle));'
             out += fmt.format(indent, ID, ID, ID) +'\n'
         return out
     
@@ -1104,7 +1104,7 @@ def compCollimator(info, relto='ISCS'):
     ID = info['ID']
     tab = '\t'
     out = 'COMPONENT c{} = {}(\n'.format(ID,getMcStasComp(TCollimator))
-    fmt = 'length = @C.L, xwidth = @C.w1, yheight = @C.h1\n'
+    fmt = 'length = @C.L, xwidth = @C.w1, yheight = @C.h1, divergence = 0\n'
     out += tab+fmt.replace('@C',ID)
     out += ')\n'
     out += compPosition(ID,relto=relto)
@@ -1300,11 +1300,32 @@ def traceComponent(comp, statinfo, relto='ISCS'):
 
 # %% Define BEER instrument components
     
-def defineInstrument(guide_monitors=False):
+def defineInstrument(shielding=False, wavy=0, guide_monitors=False):
+    """Define component sequence of the instrument.
+
+    Parameters
+    ----------
+    guide_monitors : bool
+        Include more monitors along the guide system.
+    shielding : boolean
+        If true, the instrument file will include shielding logger
+    wavy : float
+        If not zero, add wavy value [deg] to all GuideGravity components  
+
+    Returns
+    -------
+    None.
+
+    """
     global nBMon,nComp
     global beamMonolith, beamBunker, beamTransport, beamFocusing, beamline
     global listComp
-    global _SHIELDING
+    global _SHIELDING, _WAV
+    _SHIELDING = shielding
+    if isinstance(wavy, float):
+        _WAV = wavy
+    else:
+        _WAV = None
     nBMon = 0
     nComp = 0
     beamline.clear()
@@ -1632,7 +1653,7 @@ def modesSlits(indent):
     return out
 
 def modesGEX1(indent):
-    out = '\n// Define focusingg guide setting [on/off]  \n'
+    out = '\n// Define focusing guide setting [on/off]  \n'
     out += indent+'int mod_GF3[] = {'+BM.getGEXStr() + '};\n' 
     return out
 
@@ -1714,7 +1735,7 @@ def _trace_primary(statinfo):
     return out
 
 def get_instr_file(instname='BEER_reference', template='BEER_reference_v3_GPU',
-                 inpath=None, statinfo=False, shielding=False, **options):
+                 inpath=None, statinfo=False, **options):
     """Create McStas instrument file, using provided template.
     
     Parameters
@@ -1729,9 +1750,7 @@ def get_instr_file(instname='BEER_reference', template='BEER_reference_v3_GPU',
         Input directory for the template file.
         If not defined, search for templates in package resources.
     statinfo : boolean
-        If true, the simulation will produce tracing statistics
-    shielding : boolean
-        If true, the instrument file will include shielding logger
+        If true, the simulation will produce tracing statistics 
     options : dict
         Options passed to :func:`defineInstrument`.
     
@@ -1741,7 +1760,6 @@ def get_instr_file(instname='BEER_reference', template='BEER_reference_v3_GPU',
     
     """
     global _SHIELDING
-    _SHIELDING = shielding
     defineInstrument(**options)
     template_name = template+'.instr.template'
     out = ''
@@ -1793,7 +1811,7 @@ def get_instr_file(instname='BEER_reference', template='BEER_reference_v3_GPU',
     return out
  
 
-def parseTemplate(instname='BEER_reference', template='BEER_reference_v2', 
+def parseTemplate(instname='BEER_reference', template='BEER_reference_v3', 
                   outpath='', **options):
     """Create McStas instrument file, using provided template.
             

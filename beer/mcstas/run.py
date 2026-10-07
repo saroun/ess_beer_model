@@ -39,7 +39,7 @@ _MCSTAS_OUT = './'
 # name of the compiled McStas instrument executable  
 _MCSTAS_INST = 'BEER_reference'
 
-_OUTFILES = ['Lmon.dat', 'TofMon.dat', 'HDivMon.dat', 'VDivMon.dat', 'XMon.dat', 'YMon.dat']
+_OUTFILES = ['XMon.dat', 'YMon.dat', 'HDivMon.dat', 'VDivMon.dat', 'Lmon.dat', 'TofMon.dat' ]
 
 # environment variables for mcstas compiler
 _MCSTAS_ENV = {}
@@ -65,7 +65,7 @@ def updatePath():
             os.environ['PATH'] = sep.join([mcstas['PATH'],path])
 
 
-def setMcStas(version=3, PATH='', MCSTAS='', MCSTAS_CC='gcc', MCSTAS_CFLAGS='-O2'):
+def setMcStas(version=3, PATH='', MCSTAS='', MCSTAS_CC='', MCSTAS_CFLAGS=''):
     r"""Set environment for McStas.
     
     Leave argument(s) empty if you have defined them as environment variables. 
@@ -97,7 +97,7 @@ def setMcStas(version=3, PATH='', MCSTAS='', MCSTAS_CC='gcc', MCSTAS_CFLAGS='-O2
         else:
             _MCSTAS_ENV['cmd'] = 'compile_v3.sh'
     
-    # Set environmentvalues from arguments if defined
+    # Set environment values from arguments if defined
     e = {}
     if PATH:
         if not os.path.isdir(PATH):
@@ -288,8 +288,9 @@ def createWorkspace():
                 raise Exception(e)
 
     # copy resource files to workspace
-    files = [_MCSTAS_ENV['cmd']]
-    copyResources(config['WORKPATH'], files=files)
+    if 'cmd' in _MCSTAS_ENV:
+        files = [_MCSTAS_ENV['cmd']]
+        copyResources(config['WORKPATH'], files=files)
         
 
 def setConfig(workpath='', instname='BEER_reference', outpath='out'):
@@ -323,13 +324,12 @@ def setConfig(workpath='', instname='BEER_reference', outpath='out'):
             _MCSTAS_OUT = os.path.normpath(os.path.join(_MCSTAS_PATH,outpath))
     if instname:
         _MCSTAS_INST = instname
-    # create workspace files and directories
-    createWorkspace()
+
 
 
 #%% Create instrument file and compile it
 
-def createInstrument(template='', inpath=None, instname='', 
+def createInstrument(template='', inpath=None, outpath=None, instname='', 
                      **options):
     """Create McStas instrument file from a template.
     
@@ -345,26 +345,33 @@ def createInstrument(template='', inpath=None, instname='',
     inpath: str
         path where to search for instrument template. If not defined, use
         package resources.
+    outpath : str
+        Path where to save the instrument file (must already exist). 
+        If None, use the workspace setting.
     instname : str
         Instrument name (without instr extension). If empty, use the name 
         defined by :func:`setConfig`
     """
     config = getConfig()
-    checkConfig(config)
+    
     if not template:
         template = config['INSTR']+'_3x_GPU'
     if not instname:
         instname = config['INSTR']
     else:
         setConfig(instname=instname)
+    if outpath is None:
+        outpath = config['WORKPATH']
+        checkConfig(config)
+
     BMC.parseTemplate(instname=instname, 
                   template=template,
-                  outpath=config['WORKPATH'], 
+                  outpath=outpath, 
                   inpath=inpath,
                   **options)
 
 
-def compileInstrument(verify=True):
+def compileInstrument(mpi=0, verify=True):
     """
     Attempts to compile instrument file specified in config.
     No validation of McStas compiler is done. It is assumed that
@@ -386,13 +393,11 @@ def compileInstrument(verify=True):
         env = os.environ
     else:
         # Set environment
+        # Set and check environment variables
         env = os.environ
-        if 'MCSTAS' in mcstas:
-            env['MCSTAS'] = mcstas['MCSTAS']
-        if 'MCSTAS_CC' in mcstas:
-            env['MCSTAS_CC'] = mcstas['MCSTAS_CC']
-        if 'MCSTAS_CFLAGS' in mcstas:
-            env['MCSTAS_CFLAGS'] = mcstas['MCSTAS_CFLAGS'] 
+        for v in ['MCSTAS','MCSTAS_CC','MCSTAS_CFLAGS']:
+            if v in mcstas:
+                env[v] = mcstas[v]
     
     # check that there is instr file to compile
     config = getConfig()
@@ -412,12 +417,20 @@ def compileInstrument(verify=True):
         fc = os.path.join(config['WORKPATH'],config['INSTR']+'.c')
         if os.path.isfile(fc):
             os.remove(fc)
+        
+        """
         if 'SHELL' in env:
             cmd = [env['SHELL']]
         else:
             cmd = []
         cmd = cmd + [mcstas['cmd'], config['INSTR']]
+        """
         
+        cmd = ['mcrun','-c']
+        if mpi:
+            cmd.append('--mpi={}'.format(mpi))
+        cmd.append(config['INSTR']+'.instr')
+        cmd.append('-n0') # suppress running, just compile
         # join into one command string - lists may not run on Linux ...
         cmd = ' '.join(cmd)
         print('Command: '+cmd)
@@ -495,7 +508,7 @@ def verifyMcStas(verbose=1):
     """
     Check McStas compiler environment. Use setMcStas() to define it.
     
-    Call testMcStas() always before trying to run McStas using this package.
+    Call verifyMcStas() always before trying to run McStas using this package.
             
     Returns:
     --------
@@ -533,17 +546,16 @@ def verifyMcStas(verbose=1):
             traceback.print_exc(file=sys.stdout)
         return q
     
+    """    
     mcstas = getMcStas()
     config = getConfig()
     
-    # Set and check environment
+
+    # Set and check environment variables
     env = os.environ
-    if 'MCSTAS' in mcstas:
-        env['MCSTAS'] = mcstas['MCSTAS']
-    if 'MCSTAS_CC' in mcstas:
-        env['MCSTAS_CC'] = mcstas['MCSTAS_CC']
-    if 'MCSTAS_CFLAGS' in mcstas:
-        env['MCSTAS_CFLAGS'] = mcstas['MCSTAS_CFLAGS']
+    for v in ['MCSTAS','MCSTAS_CC','MCSTAS_CFLAGS']:
+        if v in mcstas:
+            env[v] = mcstas[v]
 
     msgs = ''
     if not (('MCSTAS' in env) and ('MCSTAS_CC' in env)) :
@@ -560,17 +572,19 @@ def verifyMcStas(verbose=1):
     if msgs: 
         print(msgs)
         return False 
+    
+    """
     # update PATH variable
     updatePath()
     # Verify that mcstas can be executed
     res1 = testExe(['mcstas', '--version'])    
     # Verify that C compiler can be executed
-    res2 = testExe([mcstas['MCSTAS_CC'], '--version'])
+    res2 = testExe(['mcrun', '--version'])
     return res1 and res2
 
 
-def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600, 
-                  outdir=None, quiet=False, **kwargs):
+def runSimulation(mode, n=10000, mpi=0, verbose=1, npulse=0, timeout=600, 
+                  outdir=None, quiet=False, **params):
     """
     Run McStas simulation with given parameters. Optinally plot results.
     
@@ -580,6 +594,8 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
         BEER reference mode index or ID
     n: int
         Number of neutrons to run
+    mpi : int
+        Number of CPU cores for MPI mode
     verbose: int
         `verbose` parameter passed to McStas instrument file
     npulse: int
@@ -589,6 +605,8 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
     outdir: str
         McStas output directory, relative to config['OUTPATH'].
         If not provided, mode ID string is used.
+    params
+        Instrument parameters.
     """
     # verify configuration
     if not verifyConfig(verbose=not quiet):
@@ -628,15 +646,21 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
         respath = outname
         
     # set up command parameters
-    sn = '{:d}'.format(int(n))
+    sn = '-n{:d}'.format(int(n))
     smode = 'mode={:d}'.format(imode)
     snpls = 'npulse={:d}'.format(npulse)
     sv = 'verbose={:d}'.format(int(max(0,verbose)))
-    
-    ename = os.path.join('.',config['EXE'])
-    cmd = [ename,'-n', sn, smode, sv, snpls]
-    for key in kwargs:
-        cmd += ['{}={}'.format(key, kwargs[key])]
+   
+   # ename = os.path.join('.',config['EXE'])
+   
+    cmd = ['mcrun']
+    if mpi:
+        cmd.append('--mpi={}'.format(mpi))
+    cmd.append(config['INSTR']+'.instr')
+
+    cmd += [sn, smode, sv, snpls]
+    for key in params:
+        cmd += ['{}={}'.format(key, params[key])]
     cmd += ['-d', respath]
     # clean output path if exists
     if os.path.exists(outname):
@@ -684,7 +708,7 @@ def runSimulation(mode, n=10000, verbose=1, npulse=0, timeout=600,
     return res                            
 
 
-def runModes(modes=[], counts=1e6, timeout=3600, **kwargs):
+def runModes(modes=[], counts=1e6, mpi=0, timeout=3600, **kwargs):
     
     """
     Run simulations for selected BEER reference modes.
@@ -692,9 +716,11 @@ def runModes(modes=[], counts=1e6, timeout=3600, **kwargs):
     Parameters:
     -----------
     modes: list
-        List of mode ID's
+        List of mode ID's       
     counts: int
         Number of neutrons to trace.
+    mpi : int
+        Number of CPU cores for MPI mode
     timeout: int
         Timeout in sec for one simulation
     
@@ -732,7 +758,7 @@ def runModes(modes=[], counts=1e6, timeout=3600, **kwargs):
         imode = BMOD.getModeIndex(sm[0])
         if (imode>=0):
             try:
-                res = res and runSimulation(sm[0], n=counts, npulse=npls, 
+                res = res and runSimulation(sm[0], n=counts, mpi=mpi, npulse=npls, 
                                   timeout=timeout, outdir=m, quiet=True, **kwargs)
             except Exception as e:
                 print(e)

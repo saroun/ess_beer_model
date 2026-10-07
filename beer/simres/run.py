@@ -34,7 +34,10 @@ else:
 
 # Keep SIMRES project data as global variables
 # Must be defined by user calling setConfig() before running SIMRES
-_SIMRES_JAVA = os.environ['JRE']
+if 'JRE' in os.environ:
+    _SIMRES_JAVA = os.environ['JRE']
+else:
+    _SIMRES_JAVA = 'java'
 _SIMRES_WORKPATH = ''
 _SIMRES_CFG_FILE = 'BEER_reference.xml'
 _SIMRES_CFG_DIR = ''
@@ -235,7 +238,7 @@ def scriptAll(modes=[4],  ncnt=10000, lrange=[0.2, 10.2], misalign=0.02,
     return out
 
 
-def saveScript(mode, ncnt=None, outpath='', file=None):
+def saveScript(mode, ncnt=None, outpath='', file=None, **kwargs):
     """
     Save a SIMRES script for simulation of given reference mode,
     using the function ``scriptAll``. 
@@ -252,6 +255,8 @@ def saveScript(mode, ncnt=None, outpath='', file=None):
         Output file name. If empty, the name is generated from 
         the mode ID, for example 'F0.inp' for mode F0. If None, then no script
         is saved.
+    kwargs : dict
+        Arguments passed to beer.simres.run.scriptAll().
     
     Returns:
     --------
@@ -281,16 +286,17 @@ def saveScript(mode, ncnt=None, outpath='', file=None):
         modeid = mode
     
     if file=='':
-        fname = '{}.inp'.format(modeid)
+        fname = '{}.inp'.format(modeid.strip())
     elif file is None:
         fname = None
     else:
         fname = file
     
     if fname:
-        inp = scriptAll(modes=modes, ncnt=ncnt, file=os.path.join(outpath,fname))
+        inp = scriptAll(modes=modes, ncnt=ncnt, 
+                        file=os.path.join(outpath,fname),**kwargs)
     else:
-        inp = scriptAll(modes=modes, ncnt=ncnt, file='')
+        inp = scriptAll(modes=modes, ncnt=ncnt, file='', **kwargs)
     res = {'modeid': modeid, 'scrname':fname, 'script': inp}
     return res
 
@@ -678,7 +684,7 @@ def runScript(config=None, script='BEER_setup.inp', log='',
 
 
 def runSimulation(mode, config=None, ncnt=10000, upstream=True, verbose=1,
-                 timeout=600, quiet=False):
+                 timeout=600, quiet=False, **kwargs):
     """
     Execute SIMRES simulation for the selected BEER mode. 
     
@@ -702,6 +708,8 @@ def runSimulation(mode, config=None, ncnt=10000, upstream=True, verbose=1,
         If true, print STDOUT from the simulation.
     timeout: int
         timeout in sec for execution
+    kwargs : dict
+        Arguments passed to beer.simres.run.scriptAll().
     
     See also:
     --------
@@ -717,7 +725,8 @@ def runSimulation(mode, config=None, ncnt=10000, upstream=True, verbose=1,
         config = getConfig()
 
     # generate input script
-    inp = saveScript(mode, ncnt=ncnt, outpath=config['CFGPATH'], file='')
+    inp = saveScript(mode, ncnt=ncnt, outpath=config['CFGPATH'], file='', 
+                     **kwargs)
     
     out = None
     out = runScript(config=config, 
@@ -733,7 +742,7 @@ def runSimulation(mode, config=None, ncnt=10000, upstream=True, verbose=1,
     return out
 
 
-def runSetup(verify=True, run_setup=True):
+def runSetup(verify=True, run_setup=True, **kwargs):
     """Create input script for setting up BEER instrument configuration.
     
     Optionally, launch SIMRES and update the instrument file
@@ -765,14 +774,14 @@ def runSetup(verify=True, run_setup=True):
     # Run SIMRES to execute BEER_setup.inp
     res = False
     if run_setup:
-        res = runScript(script='BEER_setup.inp', log='setup')
+        res = runScript(script='BEER_setup.inp', log='setup', **kwargs)
         if not res:
             src = os.path.basename(__file__)
             print('{}.runSimulation: Execution failed'.format(src))
     return res
 
 
-def runModes(modes=[], counts=1000, timeout=600, verify=True):
+def runModes(modes=[], counts=1000, timeout=600, verify=True, **kwargs):
     """
     Run simulations for selected BEER reference modes.
     
@@ -801,12 +810,14 @@ def runModes(modes=[], counts=1000, timeout=600, verify=True):
     config = getConfig()
     res = (len(modes)>0)
     for m in modes:
-        imode = BMOD.getModeIndex(m)
+        mm = m.strip()
+        imode = BMOD.getModeIndex(mm)
         if (imode>=0):
-            up = not (m in downmodes)
+            up = not (mm in downmodes)
             try:
-                res = res and runSimulation(m, config=config, ncnt=counts, 
-                                            upstream=up, timeout=timeout)
+                res = res and runSimulation(mm, config=config, ncnt=counts, 
+                                            upstream=up, timeout=timeout,
+                                            **kwargs)
             except Exception as e:
                 print(e)
     return res

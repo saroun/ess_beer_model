@@ -99,6 +99,7 @@ def configure_workspace(**kwargs):
     
     """
     _exe.setConfig(**kwargs)
+    _exe.createWorkspace() 
     
     
 def configure_mcstas(**kwargs):
@@ -134,8 +135,8 @@ def verify_workspace():
     _IS_MCSTAS = _exe.verifyMcStas()
     
     
-def configure(version=3, PATH='', MCSTAS='', MCSTAS_CC='gcc', 
-              MCSTAS_CFLAGS='-O2', workpath='', instname='BEER_reference', 
+def configure(version=3, PATH='', MCSTAS='', MCSTAS_CC='', 
+              MCSTAS_CFLAGS='', workpath='', instname='BEER_reference', 
               outpath='out'):
     """Configure the instrument project workspace and McStas compiler.
     
@@ -182,7 +183,7 @@ def configure(version=3, PATH='', MCSTAS='', MCSTAS_CC='gcc',
 
 
 def create_instrument(version=None, template=None, instname='', inpath=None, 
-                      GPU=True, **options):
+                      outpath=None, GPU=True, **options):
     """Create McStas instrument file from a template.
     
     If not defined the template is derived from the instrument name. 
@@ -200,12 +201,14 @@ def create_instrument(version=None, template=None, instname='', inpath=None,
     template : str
         Template name. If not defined, derive one from the instrument name, 
         McStas version and the GPU value.
-    inpath : str
-        Path where to search for instrument template. If not defined, use
-        package resources.
     instname : str
         Instrument name (without instr extension). If empty, use the name 
         defined by :func:`configure_workspace`
+    inpath : str
+        Path where to search for instrument template. If not defined, use
+        package resources.
+    outpath : str
+        Path where to save the instrument file. If None, use the workspace setting. 
     GPU : bool
         Set true to use the template with GPU-related definitions
     """    
@@ -226,11 +229,12 @@ def create_instrument(version=None, template=None, instname='', inpath=None,
             template += '_GPU'
     _exe.createInstrument(template=template, 
                           inpath=inpath,
+                          outpath=outpath,
                           instname=instname,
                           **options)
 
 
-def compile_instrument(force=False):
+def compile_instrument(force=False, mpi=0):
     """Compile default instrument file.
     
     Parameters
@@ -266,12 +270,13 @@ def compile_instrument(force=False):
         print('Try to run {}.configure() again.'.format(fn))
         return
 
-    out = _exe.compileInstrument(verify=False)
+    out = _exe.compileInstrument(mpi=mpi, verify=False)
     if not out:
         print('WARNING: could not compile instrument file')
     
 
-def execute(modes=None, n=1e5, plot=False, docompile=False, **params):
+def execute(modes=None, n=1e5, plot=False, docompile=False, mpi=0, quiet=False, 
+            **params):
     """Run McStas simulation for given BEER modes and number of neutrons.
     
     Parameters
@@ -291,6 +296,8 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, **params):
         Create and compile the instrument file (BEER_reference.instr)
         before simulation. Requires McStas installed and configured.
         See :func:`configure_mcstas`.
+    mpi : int
+        Number of CPU cores for MPI mode.
     params
         Instrument parameters.
         
@@ -323,7 +330,7 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, **params):
 
     if docompile:
         # compile
-        out = _exe.compileInstrument(statinfo=False, shielding=False, 
+        out = _exe.compileInstrument(mpi=mpi, statinfo=False, shielding=False, 
                                       verify=False)
         if not out:
             print('WARNING: could not compile instrument file.')
@@ -345,7 +352,7 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, **params):
     datas = None
     # execute simulation for a single mode:
     if modeid:
-        out = _exe.runSimulation(modeid, n=counts, **params)
+        out = _exe.runSimulation(modeid, mpi=mpi, n=counts, quiet=quiet, **params)
         if out:
             # process output files and get a list of data objects
             datas = _exe.processRun(modeid)
@@ -357,14 +364,20 @@ def execute(modes=None, n=1e5, plot=False, docompile=False, **params):
 
     # execute simulation for multiple modes:
     else:
-        out = _exe.runModes(modes=modes, counts=counts, timeout=timeout,
+        out = _exe.runModes(modes=modes, mpi=mpi, counts=counts, timeout=timeout,
                             **params)
         if out:
             # retrieve results:
             datas = _exe.processResults(modes)
-            # plot the retrieved results:
             if plot:
-                _exe.plotResults(datas, title='McStas', pdf='results')
+                if isinstance(plot, str):
+                    fout = plot
+                else:
+                    fout = 'results'
+                try:
+                    _exe.plotResults(datas, title='McStas', pdf=fout)
+                except Exception as e:
+                    print(e)
         else:
             print('Simulation not completed.')
     return datas

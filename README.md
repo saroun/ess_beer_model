@@ -4,7 +4,7 @@ Neutron optics model for the diffractometer BEER at the European Spallation Sour
 Author: Jan Saroun, saroun@ujf.cas.cz  
 Copyright (c) 2020 Nuclear Physics Institute, CAS, Rez, http://www.ujf.cas.cz
 
-Repository: https://bitbucket.org/saroun/beer_optics 
+Repository: https://github.com/saroun/ess_beer_model
 
 ## Summary
 
@@ -24,11 +24,21 @@ SIMRES: https://github.com/saroun/simres
 
 ## Quick guide
 
-Install:
+### Install:
 
     # from root package directory call
     pip install -e .
     # check pip docs for other ways of installation
+
+### Jupyter notebook:
+
+Examples of basic usage and simulations of the primary instrument are provided in Jupter notebook files:
+
+- [ess_beer_model.ipynb](ess_beer_model.ipynb)
+- [ess_beer_simulation.ipynb](ess_beer_simulation.ipynb)
+
+
+### Python scripts:
 
 Get beam axis, beam size and coordinate conversions:
 
@@ -101,24 +111,12 @@ or use the beer.mcstas package:
     # to replot results:  
     mcstas.plot_result(result, title='Test simulation', pdf='myresult')
 
-    # create instrument file 
-    mcstas.create_instrument()
-
-    # compile instrument file
-    mcstas.compile_instrument(force=True)
-
-    # run simulation for one modes
-    result = mcstas.execute(modes='PS2', n=1e7, plot=True)
-
     # or run simulation for selected modes
     result = mcstas.execute(modes='F0,F1', n=1e6, plot=True)
 
     # or run simulation for all modes 
     import beer.modes as bmodes
     result = mcstas.execute(modes=bmodes.getModeKeys(), n=1e7, plot=True)
-
-    # to replot results:  
-    mcstas.plot_result(result, title='Test simulation', pdf='myresult')
 
     # Simulation using an instrument template provided by user
     mcstas.create_instrument(template='BEER_user', 
@@ -147,7 +145,7 @@ or use the beer.simres package:
     import beer.modes as bmodes
 
     # Configure environment to define workspace directory.
-    # Optionally, you van also set `java` path and `simresdir` to define the 
+    # Optionally, you can also set `java` path and `simresdir` to define the 
     # JRE interpreter and SIMRES installation directory, respectively.
     simres.configure(workpath='my_path')
 
